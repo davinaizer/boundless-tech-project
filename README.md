@@ -51,6 +51,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 **Two minutes**
 - [Idea and scope: ADR-001](docs/adr/001-problem-and-idea.md)
 - [Architecture and diagrams](docs/architecture.md): user flow, system design, request flow
+- [Design theme](DESIGN.md) and [mockups](docs/design/): visual direction, styled after the public look of boundless.co.uk (concept only)
 
 **Ten minutes**
 - [Decision records](docs/adr/README.md): one file per decision, each with options, consequences and its weakest assumption
@@ -104,11 +105,13 @@ Current, from the ADRs:
 
 ```text
 AGENTS.md          working rules for contributors and AI agents
+DESIGN.md          visual theme (design tokens and rationale)
 docs/
   brief/           the challenge brief
   adr/             decision records
   research/        evidence behind the decisions
   architecture.md  design and diagrams
+  design/          UI mockups
   TODO.md          plan, acceptance criteria, time log
 .agents/skills/    task workflow skills (.claude/skills links here)
 src/               application code (not yet created)
