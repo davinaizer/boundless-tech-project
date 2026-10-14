@@ -17,3 +17,9 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | ADR | Title | Status |
 |---|---|---|
 | [001](001-problem-and-idea.md) | Problem and idea selection | Accepted |
+| [002](002-ai-boundary.md) | AI boundary | Accepted |
+| [003](003-stack-and-hosting.md) | Stack and hosting | Accepted |
+| [004](004-data-layer.md) | Data layer | Accepted |
+| [005](005-llm-provider.md) | LLM provider and model | Accepted |
+| [006](006-demo-protection.md) | Public demo protection | Accepted |
+| [007](007-test-strategy.md) | Test strategy | Accepted |
