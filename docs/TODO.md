@@ -5,10 +5,10 @@ Phases are small and reversible. Each ends with a review gate before the next st
 ## Phase 0: Setup and governance (1h)
 
 - [ ] Scaffold Next.js (App Router), TypeScript strict, Tailwind
-- [ ] ESLint, Prettier, Vitest, Playwright config, `npm run check` and `npm run e2e`
+- [ ] ESLint, Prettier, Vitest, Playwright config, `pnpm check` and `pnpm e2e`
 - [ ] GitHub Actions: typecheck, lint, unit, e2e
-- [ ] Define the plan, implement, review and complete workflow files (provisional)
-- [ ] Deploy spike: minimal route handler on Netlify; check function time limits. If unacceptable, use Vercel and record the reason in ADR-003's follow-up
+- [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
+- [ ] Deploy spike: minimal route handler on Netlify; check function time limits and that the build detects pnpm. If unacceptable, use Vercel and record the reason in ADR-003's follow-up
 - [ ] `.gitignore` cleaned for this stack
 
 **Done when:** CI is green on an empty app and the spike URL responds.

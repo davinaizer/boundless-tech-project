@@ -15,6 +15,7 @@ A small full-stack AI app (a natural-language benefits finder) built as a techni
 | Why a decision was made | [docs/adr/](docs/adr/README.md) |
 | Evidence behind decisions | [docs/research/](docs/research/) |
 | Work plan, phases, acceptance criteria | [docs/TODO.md](docs/TODO.md) |
+| Task workflow skills | [.agents/skills/](.agents/skills/) |
 
 Every durable concept has one owner. Define it there; elsewhere summarise and link.
 
@@ -38,7 +39,7 @@ Delegation level follows consequence, reversibility and how well the result can 
 
 Accepted work needs: scope and acceptance criteria, verification proportionate to the change, review of assumptions and the meaningful diff, and any unresolved risk stated. Passing checks does not replace review.
 
-Workflow per task: **plan → implement → review → complete (handoff)**. These are provisional until repeated use shows they are worth keeping.
+Workflow per task: **plan → implement → review → complete**, using the skills in `.agents/skills/` (`plan-next-task`, `implement-task`, `review-task`, `complete-task`). They are adapted from an earlier project and trimmed to this repository's documents. Claude Code finds them through the `.claude/skills` symlink. Each stage hands off to the next and stops for developer approval where the skill says so.
 
 ## Conventions
 
@@ -54,6 +55,6 @@ Workflow per task: **plan → implement → review → complete (handoff)**. The
 Once the project is scaffolded, run before handoff:
 
 ```sh
-npm run check   # typecheck, lint, unit tests
-npm run e2e     # Playwright happy paths, mock AI provider
+pnpm check   # typecheck, lint, unit tests
+pnpm e2e     # Playwright happy paths, mock AI provider
 ```
