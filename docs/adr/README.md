@@ -23,3 +23,4 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [005](005-llm-provider.md) | LLM provider and model | Accepted |
 | [006](006-demo-protection.md) | Public demo protection | Accepted |
 | [007](007-test-strategy.md) | Test strategy | Accepted |
+| [008](008-design-direction.md) | Design direction | Accepted |

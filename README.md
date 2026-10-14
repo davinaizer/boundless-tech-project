@@ -76,6 +76,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [005](docs/adr/005-llm-provider.md) | Claude Haiku 5.5 behind a single module |
 | [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit |
 | [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e paths, on-demand eval |
+| [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
 
 ## Evidence and assumptions
 
@@ -83,7 +84,7 @@ Claims about the company in `docs/research/` are labelled by source: public page
 
 ## How this was built
 
-AI assistance is part of the workflow and is disclosed. Architecture, the AI boundary and schema design are human-led. Boilerplate, tests and documentation drafts are delegated with review. Each task follows plan, implement, review, complete, with developer approval between plan and implementation. Commits that were AI-assisted carry a `Co-Authored-By` trailer. See [AGENTS.md](AGENTS.md).
+AI assistance is part of the workflow and is disclosed. Architecture, the AI boundary and schema design are human-led. Boilerplate, tests and documentation drafts are delegated with review. Each task follows plan, implement, review, complete, with developer approval between plan and implementation. Commits that were AI-assisted carry a `Co-Authored-By` trailer. The UI mockups in `docs/design/` were AI-generated from public observation of boundless.co.uk and show direction only; the built app may differ ([ADR-008](docs/adr/008-design-direction.md)). See [AGENTS.md](AGENTS.md).
 
 ## Setup
 
