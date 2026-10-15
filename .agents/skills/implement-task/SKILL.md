@@ -1,6 +1,6 @@
 ---
 name: implement-task
-description: Implement one developer-approved task from its plan. Use after plan approval. Stays in scope, validates, hands off to review-task without a verdict.
+description: Implement one developer-approved task from its plan. Use after plan approval. Stays in scope, validates, then invokes review-task automatically. Issues no verdict itself.
 ---
 
 # Implement Task
@@ -19,8 +19,20 @@ The approved plan is the contract. Stop and ask if it is missing, unapproved, or
 
 - No unrelated cleanup, features, dependencies or abstractions. Note discoveries as future candidates instead.
 - No silent product, architecture or dependency decisions. If one is needed, stop with the evidence, options and a recommendation.
-- Do not commit, branch, or issue a review verdict.
+- Do not commit or branch.
+- Do not issue a verdict yourself; the verdict comes only from `review-task`.
 
 ## Output
 
-Short handoff: what changed, validation result, blockers or open decisions (omit if none), and "ready for review-task". End by suggesting the developer run `review-task`; if a blocker or open decision remains, say it must be resolved first. Do not start the review.
+Short handoff: what changed, validation result, and blockers or open decisions (omit if none).
+
+## Review (automatic)
+
+When the handoff is written, invoke `review-task` with the Skill tool, without waiting for the developer. Do not edit code between the handoff and the review.
+
+Skip the automatic review, and say why, only when:
+
+- a blocker or open decision remains, so it must be resolved first;
+- the plan's validation fails for a reason you could not fix.
+
+Report the `review-task` result as returned. Do not fix findings in the same run; `CHANGES REQUIRED` goes back to the developer, who decides whether to re-run `implement-task`.
