@@ -3,6 +3,7 @@ import type { z } from "zod";
 import { API_ERROR_STATUS, type ApiError, type ApiErrorCode } from "@/domain/api";
 import { env } from "@/lib/env";
 import { estimateCostUsd, logRequest, type RequestLog } from "@/lib/log";
+import { clientKey, type RateLimiter } from "@/lib/rate-limit";
 import { APP_VERSION } from "@/lib/version";
 import { PROMPT_VERSION } from "@/services/prompt-version";
 
@@ -10,14 +11,19 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   invalid_request: "The request is not valid.",
   unsupported_media_type: "The request body must be JSON.",
   payload_too_large: "The request body is too large.",
+  rate_limited: "Too many requests. Please wait and try again.",
   internal_error: "Something went wrong. Please try again.",
 };
 
-function errorResponse(code: ApiErrorCode, requestId: string): Response {
+function errorResponse(
+  code: ApiErrorCode,
+  requestId: string,
+  headers: Record<string, string> = {},
+): Response {
   const body: ApiError = { error: { code, message: MESSAGES[code], requestId } };
   return Response.json(body, {
     status: API_ERROR_STATUS[code],
-    headers: { "x-request-id": requestId },
+    headers: { "x-request-id": requestId, ...headers },
   });
 }
 
@@ -67,6 +73,9 @@ export async function handleJson<TBody, TResult>(
     body: z.ZodType<TBody>;
     result: z.ZodType<TResult>;
     run: (body: TBody) => Promise<{ body: unknown; telemetry?: Telemetry }>;
+    // Checked before anything is read, so a refused request costs nothing. Only
+    // the endpoints that call the model set it (ADR-006).
+    rateLimit?: RateLimiter;
   },
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
@@ -99,6 +108,15 @@ export async function handleJson<TBody, TResult>(
   };
 
   try {
+    const verdict = options.rateLimit?.check(clientKey(request.headers));
+    if (verdict !== undefined && !verdict.allowed) {
+      return finish(
+        errorResponse("rate_limited", requestId, {
+          "retry-after": String(verdict.retryAfterSeconds),
+        }),
+        "rate_limited",
+      );
+    }
     if (!isJson(request.headers.get("content-type"))) {
       return finish(errorResponse("unsupported_media_type", requestId), "unsupported_media_type");
     }

@@ -105,7 +105,7 @@ Gate: Phases 0 to 5 complete except the demo, which is recorded after this phase
 
 - [ ] Check pnpm detection on Netlify, database connectivity from a function, and the commit variable for the version string; use Vercel and record the reason if Netlify does not work
 - [ ] Confirm the pinned Next.js version and `proxy.ts` use against the Netlify adapter docs ([ADR-009](adr/009-nextjs-conventions.md) rule 15). Read 2026-10-15 for the scaffold pin (`next@16.4.1`): the page says the adapter supports 13.5 onward, is tested with every new stable release, and lists Cache Components and Turbopack as fully supported. It names no 16.x version and does not mention `proxy.ts`, so 16.4.1 is not verified on Netlify until the deploy spike.
-- [ ] Rate limit (best effort) and provider spend limit ([ADR-006](adr/006-demo-protection.md))
+- [x] Rate limit (best effort) and provider spend limit ([ADR-006](adr/006-demo-protection.md)). Code built 2026-10-15: a per-address limit on `/api/interpret` and `/api/explain` (`RATE_LIMIT_PER_MINUTE`, default 20, real provider only), HTTP 429 with `Retry-After`, and `RATE_LIMIT_PER_MINUTE` in `SECRETS_SCAN_OMIT_KEYS`. The spend limit is set in the Anthropic console by the author: amount and workspace to be recorded here once confirmed (not verified by me). Live burst check on the deployed site pending
 - [ ] Deploy; smoke test against `/api/health`; add the link to the README
 
 ## Optional, only if time allows

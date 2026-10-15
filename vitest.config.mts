@@ -23,6 +23,7 @@ export default defineConfig({
       AI_TIMEOUT_MS: "",
       MAX_QUERY_CHARS: "",
       MAX_BODY_BYTES: "",
+      RATE_LIMIT_PER_MINUTE: "",
     },
     include: ["src/**/*.test.ts", "evals/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],

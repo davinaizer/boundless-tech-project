@@ -10,6 +10,7 @@ export const API_ERROR_STATUS = {
   invalid_request: 400,
   unsupported_media_type: 415,
   payload_too_large: 413,
+  rate_limited: 429,
   internal_error: 500,
 } as const;
 

@@ -33,6 +33,13 @@ const schema = z
       unsetIfEmpty,
       z.coerce.number().int().positive().max(65_536).default(4096),
     ),
+    // Model requests per client address per minute, applied only with the real
+    // provider (ADR-006). 20 is a heuristic: about ten submits a minute, since a
+    // submit is an interpret and an explain call.
+    RATE_LIMIT_PER_MINUTE: z.preprocess(
+      unsetIfEmpty,
+      z.coerce.number().int().positive().max(600).default(20),
+    ),
   })
   .refine((value) => value.AI_PROVIDER !== "anthropic" || value.ANTHROPIC_API_KEY !== undefined, {
     message: "ANTHROPIC_API_KEY is required when AI_PROVIDER is anthropic",
@@ -53,4 +60,5 @@ export const env = parseEnv({
   AI_TIMEOUT_MS: process.env.AI_TIMEOUT_MS,
   MAX_QUERY_CHARS: process.env.MAX_QUERY_CHARS,
   MAX_BODY_BYTES: process.env.MAX_BODY_BYTES,
+  RATE_LIMIT_PER_MINUTE: process.env.RATE_LIMIT_PER_MINUTE,
 });

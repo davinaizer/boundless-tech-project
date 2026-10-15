@@ -25,6 +25,7 @@ export type RequestLog = {
     | "invalid_request"
     | "unsupported_media_type"
     | "payload_too_large"
+    | "rate_limited"
     | "internal_error";
   latencyMs: number;
   promptVersion: string;

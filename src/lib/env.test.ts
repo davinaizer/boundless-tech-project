@@ -92,5 +92,9 @@ describe("parseEnv", () => {
     expect(parseEnv({ ...version, MAX_QUERY_CHARS: "" }).MAX_QUERY_CHARS).toBe(200);
     expect(() => parseEnv({ ...version, MAX_QUERY_CHARS: "0" })).toThrow();
     expect(() => parseEnv({ ...version, MAX_BODY_BYTES: "1000000" })).toThrow();
+    expect(env.RATE_LIMIT_PER_MINUTE).toBe(20);
+    expect(parseEnv({ ...version, RATE_LIMIT_PER_MINUTE: "5" }).RATE_LIMIT_PER_MINUTE).toBe(5);
+    expect(() => parseEnv({ ...version, RATE_LIMIT_PER_MINUTE: "0" })).toThrow();
+    expect(() => parseEnv({ ...version, RATE_LIMIT_PER_MINUTE: "100000" })).toThrow();
   });
 });

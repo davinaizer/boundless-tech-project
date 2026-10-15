@@ -156,12 +156,13 @@ One Lighthouse 13.4.1 run of the home page at `http://localhost:3000/` on 2026-1
 Current, from the ADRs:
 
 - **Postgres plus an in-memory fallback.** The data layer shows schema, migrations and safe query building, and the port has two real implementations. The cost is about 2 hours (estimate) and a container for the Postgres path; the in-memory adapter keeps the app runnable without one ([ADR-010](docs/adr/010-postgres-data-layer.md)).
+- **Deployed demo.** The live site uses the real model behind that rate limit and the 200-character query cap. The provider-side spend limit is the control that actually bounds cost; it is set by the author in the Anthropic console, cannot be seen from this repository, and is not verified here.
 - **Local-first, deployment optional.** The recorded demo is a required deliverable and is recorded after the optional deploy phase, which is time-boxed; if the deploy is abandoned the demo is recorded locally. The cost is no live link by default, and reviewers need an API key or the mock provider to try the AI themselves ([ADR-011](docs/adr/011-local-first-delivery.md)).
 - **Sample data only.** Savings are illustrative, not claims about real offers.
 - **Small model, no benchmark.** Parse quality is checked by a hand-written eval, which is a regression check, not a measure of production accuracy.
 - **Eval is small and partly tuned.** 21 author-written cases, one sample each, and the prompt was adjusted after failures on the same set. The mock-based e2e cannot see real-model behaviour, which is how the "cheap" price bug was found only by the eval ([eval-results](docs/eval-results.md)).
 - **No quality judge for the explain step.** Deterministic grounding guards what an explanation may say, and a rejected line falls back to a plain description. A model-graded eval was considered and dropped: the only judge available without changing the AI module is the same model family, on about 18 lines, a weak signal ([roadmap](docs/roadmap.md)).
-- **Best-effort rate limiting, only if deployed.** In-memory limits do not hold across serverless instances. The provider spend limit is the real control.
+- **Best-effort rate limiting.** The two model endpoints share a per-address limit (20 requests a minute by default, only with the real provider) that returns HTTP 429. It is in memory, so each serverless instance counts on its own and a restart forgets it. The provider spend limit is the real control, and it lives in the provider console, outside this repository (see the deployed-demo note below).
 - **Only some filters are evidenced in the production index.** Category, expiry and probably membership level were observed. Region, price and audience exist only in the sample data.
 
 Operational scope (observability, health check, versioning, OpenAPI, analytics) and scalability hypotheses are in the [roadmap](docs/roadmap.md).
