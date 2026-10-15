@@ -12,7 +12,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
 - [x] `GET /api/health` returning status and version (request-time via `connection()`)
 - [x] App version string `v<package>+<build>.<short sha>` computed at build time in `next.config.ts`; build number from the git commit count, `v<package>+dev` when git is unavailable. CI checks out full history (`fetch-depth: 0`). `src/lib/env.ts` now exists with this one variable and Zod; Phase 1 extends it
-- [ ] `.gitignore` cleaned for this stack
+- [x] `.gitignore` cleaned for this stack (earlier-project leftovers removed; Playwright output paths are its documented defaults, confirmed when the Playwright item runs)
 - [ ] Oxlint `no-restricted-imports` boundaries (confirm per-folder overrides and a `process.env` restriction work, [ADR-012](adr/012-oxc-lint-and-format.md)) and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
 
 **Done when:** CI is green on an empty app and `pnpm db:up` starts a local database.
