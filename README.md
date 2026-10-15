@@ -10,7 +10,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
 | Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, e2e and eval. Phases 0 to 4.1 done; Phase 5 (this README, the demo) in progress. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
-| Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
+| Recorded demo | Pending: link will be added here. It is recorded after the optional deploy phase, from the live app if there is one, otherwise locally ([ADR-015](docs/adr/015-demo-recorded-after-deploy.md)) |
 
 ## The idea in 30 seconds
 
@@ -86,10 +86,11 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
 | [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |
 | [010](docs/adr/010-postgres-data-layer.md) | Postgres adapter as the default behind the port; in-memory adapter kept for tests and a no-database run |
-| [011](docs/adr/011-local-first-delivery.md) | Local-first; Podman for Postgres; deploy only at a gate after the demo is recorded |
+| [011](docs/adr/011-local-first-delivery.md) | Local-first; Podman for Postgres; deploy only at a gate (order of work superseded by ADR-015) |
 | [012](docs/adr/012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting |
 | [013](docs/adr/013-ai-generated-sample-data.md) | Fictional sample catalogue generated once, offline, from a committed spec |
 | [014](docs/adr/014-filters-in-the-url.md) | Filters in the URL, read on the client, so the page stays static |
+| [015](docs/adr/015-demo-recorded-after-deploy.md) | Demo recorded after the optional deploy, Phase 6 time-boxed to 1.5 hours |
 
 ## Evidence and assumptions
 
@@ -155,7 +156,7 @@ One Lighthouse 13.4.1 run of the home page at `http://localhost:3000/` on 2026-1
 Current, from the ADRs:
 
 - **Postgres plus an in-memory fallback.** The data layer shows schema, migrations and safe query building, and the port has two real implementations. The cost is about 2 hours (estimate) and a container for the Postgres path; the in-memory adapter keeps the app runnable without one ([ADR-010](docs/adr/010-postgres-data-layer.md)).
-- **Local-first, deployment optional.** The recorded demo is the guaranteed deliverable; a live link is added only if the work is complete. The cost is no live link by default, and reviewers need an API key or the mock provider to try the AI themselves ([ADR-011](docs/adr/011-local-first-delivery.md)).
+- **Local-first, deployment optional.** The recorded demo is a required deliverable and is recorded after the optional deploy phase, which is time-boxed; if the deploy is abandoned the demo is recorded locally. The cost is no live link by default, and reviewers need an API key or the mock provider to try the AI themselves ([ADR-011](docs/adr/011-local-first-delivery.md)).
 - **Sample data only.** Savings are illustrative, not claims about real offers.
 - **Small model, no benchmark.** Parse quality is checked by a hand-written eval, which is a regression check, not a measure of production accuracy.
 - **Eval is small and partly tuned.** 21 author-written cases, one sample each, and the prompt was adjusted after failures on the same set. The mock-based e2e cannot see real-model behaviour, which is how the "cheap" price bug was found only by the eval ([eval-results](docs/eval-results.md)).

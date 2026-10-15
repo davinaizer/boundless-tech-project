@@ -94,14 +94,14 @@ Eval-only: nothing in the runtime or the routes depends on these. Done before Ph
 
 - [x] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements). Done 2026-10-15 together with the next item; setup commands run in a clean clone (in-memory with the mock, and migrate and seed on a fresh Postgres database); the recorded-demo marker stays until the demo exists
 - [x] "Context and assumptions" and "what I would do at the company" in the README
-- [ ] Record the demo (Loom or similar) from the local run, with the real model; this is the guaranteed deliverable
+- [ ] Record the demo (Loom or similar) with the real model; this is still the required deliverable. Deferred until after Phase 6 ([ADR-015](adr/015-demo-recorded-after-deploy.md)): from the deployed app if it is live, otherwise from the local run. Not optional
 - [x] Check ADRs, architecture and the roadmap are current. Done 2026-10-15: checked paths, scripts, links, ADR status lines and counts against the tree; fixed the architecture folder tree and CI line, the roadmap version-string open point, the hours figure and a missing below-the-line row, and the ADR index status column. No accepted ADR was edited and no built behaviour contradicted one
 
 **Done when:** a new reader can set up, run and understand the decisions from the README.
 
 ## Phase 6: Optional deploy (about 0.75h, outside the total)
 
-Gate: Phases 0 to 5 complete and the demo recorded ([ADR-011](adr/011-local-first-delivery.md)).
+Gate: Phases 0 to 5 complete except the demo, which is recorded after this phase ([ADR-015](adr/015-demo-recorded-after-deploy.md), superseding the demo-first gate in [ADR-011](adr/011-local-first-delivery.md)). Time-box: stop at 1.5 hours (twice the estimate); if it is reached, abandon the deploy, record the reason here and record the demo locally.
 
 - [ ] Check pnpm detection on Netlify, database connectivity from a function, and the commit variable for the version string; use Vercel and record the reason if Netlify does not work
 - [ ] Confirm the pinned Next.js version and `proxy.ts` use against the Netlify adapter docs ([ADR-009](adr/009-nextjs-conventions.md) rule 15). Read 2026-10-15 for the scaffold pin (`next@16.4.1`): the page says the adapter supports 13.5 onward, is tested with every new stable release, and lists Cache Components and Turbopack as fully supported. It names no 16.x version and does not mention `proxy.ts`, so 16.4.1 is not verified on Netlify until the deploy spike.

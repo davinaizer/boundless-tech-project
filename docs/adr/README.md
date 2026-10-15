@@ -26,7 +26,8 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [008](008-design-direction.md) | Design direction | Accepted |
 | [009](009-nextjs-conventions.md) | Next.js structure and conventions | Accepted; ESLint wording in rule 6 superseded by ADR-012 |
 | [010](010-postgres-data-layer.md) | Postgres adapter behind the search port | Accepted |
-| [011](011-local-first-delivery.md) | Local-first delivery, Podman, deployment at a gate | Accepted |
+| [011](011-local-first-delivery.md) | Local-first delivery, Podman, deployment at a gate | Accepted; order of work and gate superseded by ADR-015 |
 | [012](012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting | Accepted |
 | [013](013-ai-generated-sample-data.md) | AI-generated fictional sample data | Accepted |
 | [014](014-filters-in-the-url.md) | Filters in the URL, read on the client | Accepted |
+| [015](015-demo-recorded-after-deploy.md) | Record the demo after the optional deploy, Phase 6 time-boxed | Accepted |

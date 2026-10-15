@@ -1,6 +1,6 @@
 # ADR-011: Local-first delivery, containers with Podman, deployment at a gate
 
-- **Status:** Accepted
+- **Status:** Accepted. The "Order of work" and "Deploy gate" bullets are superseded by [ADR-015](015-demo-recorded-after-deploy.md) (the demo is recorded after the deploy); the rest stands.
 - **Date:** 2026-10-15
 - **Decision owner:** Davi
 
