@@ -118,4 +118,10 @@ export const EVAL_CASES: readonly EvalCase[] = [
     query: "a cheap family day out near Brighton",
     expect: { categories: ["days-out"], region: "South East", audience: "family" },
   },
+  // The counterpart of cheap-family-brighton: "free" does state a price of 0.
+  {
+    id: "free-days-out",
+    query: "free things to do in Cardiff",
+    expect: { categories: ["days-out"], region: "Wales", maxPricePerPerson: 0 },
+  },
 ];

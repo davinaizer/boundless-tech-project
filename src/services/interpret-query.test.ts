@@ -50,6 +50,12 @@ describe("INTERPRET_SYSTEM_PROMPT", () => {
   it("lists every region by the exact name region matching compares", () => {
     for (const region of UK_REGIONS) expect(INTERPRET_SYSTEM_PROMPT).toContain(region);
   });
+
+  it("separates a free price (0) from a price word with no amount (left out)", () => {
+    expect(INTERPRET_SYSTEM_PROMPT).toContain('"Free" or "no cost" is 0');
+    expect(INTERPRET_SYSTEM_PROMPT).toContain('"cheap"');
+    expect(INTERPRET_SYSTEM_PROMPT).toContain("leave the field out");
+  });
 });
 
 describe("INTERPRET_SCHEMA", () => {
