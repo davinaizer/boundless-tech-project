@@ -163,6 +163,7 @@ Decided in Phase 1:
 
 Decided in Phase 2:
 - `src/lib/ai` has one SDK module (`client.ts`), a mock (`mock.ts`), shared types and an `index.ts` whose `getAiClient()` is the one place a provider is chosen: `AI_PROVIDER=anthropic` (needs `ANTHROPIC_API_KEY`) or `mock`, the default, so the app, CI and e2e run without a key. A call takes a plain JSON schema written for the model and returns untyped data that the service re-validates with Zod ([ADR-005](adr/005-llm-provider.md)), or a failure reason: `refusal`, `truncated`, `invalid_json` or `unavailable` (any SDK error). SDK retries are off, so a service's one retry is the only retry ([ADR-002](adr/002-ai-boundary.md)). The SDK reads some `ANTHROPIC_*` variables itself; the client pins the credential, host and log level so only `env.ts` decides them. Unit tests blank both AI variables, so they always get the mock.
+- `PROMPT_VERSION` lives in `src/services/prompt-version.ts`, beside the services that own the prompts; `lib/ai` stays prompt-agnostic. One version covers both prompts, formatted as the date of the change plus a counter (`2026-10-15.1`). It is bumped on any change to a system prompt, a model-facing JSON schema, or the call settings that shape output (effort, thinking, max tokens). The request log line and each eval run record it.
 
 ## Contracts
 

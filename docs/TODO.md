@@ -37,11 +37,11 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 ## Phase 2: AI layer (2h25)
 
 - [x] `lib/ai` client for Claude Haiku 5.5 with structured output; mock provider. Built with `@anthropic-ai/sdk@0.133.0` (`src/lib/ai/`: `client.ts`, `mock.ts`, `types.ts`, `index.ts`). One structured-output call with a caller-supplied JSON schema, returning `unknown` data for the service to re-validate, token usage, and a failure reason (`refusal`, `truncated`, `invalid_json`, `unavailable`) from `stop_reason` and SDK errors. Effort `low` with adaptive thinking (a heuristic, tuned by the eval); SDK retries off (`maxRetries: 0`) so the services own the one retry; credential, host and log level pinned so ambient `ANTHROPIC_*` variables cannot change them (`ANTHROPIC_CUSTOM_HEADERS` is still read; the SDK has no option to stop it). `getAiClient()` picks the provider from `AI_PROVIDER` (`mock` by default; `anthropic` needs `ANTHROPIC_API_KEY`); the mock plays scripted results and, unscripted, answers like an unreachable model. 18 unit tests. One live call checked 2026-10-15 with a simplified schema: schema-valid JSON, 326 input and 48 output tokens, about 2 to 3 s (two samples, not a latency measure)
-- [ ] `PROMPT_VERSION` constant, recorded in eval output
+- [x] `PROMPT_VERSION` constant (`src/services/prompt-version.ts`, `2026-10-15.1`): one version for both prompts, bumped on any change to a system prompt, a model-facing JSON schema, or effort, thinking or max tokens ([architecture](architecture.md#folder-structure)). Narrowed at planning: the eval and the request log record it when they are built
 - [ ] Timeout on model calls (set in config, a heuristic tuned from logged latency); a timeout counts as a failed attempt
 - [ ] `interpretQuery` with Zod re-validation, one retry, keyword fallback, no call on empty input
 - [ ] `explainResults` with grounding check
-- [ ] Eval set of about 15 queries and an on-demand script
+- [ ] Eval set of about 15 queries and an on-demand script; each run records `PROMPT_VERSION`
 - [ ] Service tests with the mocked client, including a timeout
 - [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 

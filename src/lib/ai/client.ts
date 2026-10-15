@@ -7,6 +7,7 @@ export const MODEL = "claude-haiku-5-5";
 
 // Haiku 5.5 thinks adaptively by default at effort "medium". "low" is a
 // heuristic for short, latency-sensitive calls; the eval is where it is tuned.
+// Changing effort or thinking bumps PROMPT_VERSION (src/services/prompt-version.ts).
 const EFFORT = "low";
 
 type MessagesApi = Pick<Anthropic["messages"], "create">;
