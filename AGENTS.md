@@ -58,7 +58,7 @@ Workflow per task: **plan → implement → review → complete**, using the ski
 Once the project is scaffolded, run before handoff:
 
 ```sh
-pnpm check   # typecheck, lint, unit tests
+pnpm check   # typecheck, lint, format check, unit tests
 pnpm e2e     # Playwright happy paths, mock AI provider
 pnpm test:integration   # contract tests against local Postgres (start it with pnpm db:up, Podman)
 ```

@@ -5,7 +5,8 @@ Phases are small and reversible. Each ends with a review gate before the next st
 ## Phase 0: Setup and governance (1h20)
 
 - [x] Scaffold Next.js (App Router), TypeScript strict, Tailwind
-- [ ] Oxlint, Oxfmt ([ADR-012](adr/012-oxc-lint-and-format.md)), Vitest, Playwright config, `pnpm check` and `pnpm e2e`
+- [x] Oxlint, Oxfmt ([ADR-012](adr/012-oxc-lint-and-format.md)), Vitest, `pnpm check` (typecheck, lint, format check, unit tests)
+- [ ] Playwright config and `pnpm e2e`, once there is a spec and the mock provider to run it against (split from the item above)
 - [ ] GitHub Actions: typecheck, lint, unit, e2e
 - [ ] `compose.yaml` for local Postgres with a fully qualified image; confirm the `podman compose` provider works on the author's machine and the Postgres major version ([ADR-011](adr/011-local-first-delivery.md)); fall back to `podman run` scripts if not. `pnpm db:up` and `db:down`; `.env.example` with dev-only values
 - [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
