@@ -1,5 +1,6 @@
 import type { Offer } from "@/domain/offer";
 import { formatPence, tierText, validityText } from "./format";
+import { Spinner } from "./Spinner";
 
 export function OfferCard({
   offer,
@@ -25,7 +26,12 @@ export function OfferCard({
           </p>
           <p className="mt-2 min-h-[1.45em]">
             {line ??
-              (linePending ? <span className="text-muted">Working out why it fits…</span> : null)}
+              (linePending ? (
+                <span className="inline-flex items-center gap-2 text-muted">
+                  <Spinner />
+                  Working out why it fits…
+                </span>
+              ) : null)}
           </p>
         </div>
         {savingPerUsePence !== undefined && (
