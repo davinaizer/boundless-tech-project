@@ -86,7 +86,7 @@ sequenceDiagram
     API->>API: Validate with Zod, retry once, else keyword fallback
     API-->>UI: Filters
     UI->>API: POST /api/search with filters
-    API->>Port: search(filters)
+    API->>Port: search(filters, today)
     Port-->>API: Offers
     API->>API: estimateSavings(offers)
     API-->>UI: Offers and savings
@@ -179,23 +179,26 @@ The only way services reach the catalogue. It is an interface in `src/domain`; a
 
 | Operation | In | Out | Used by |
 |---|---|---|---|
-| `search` | `Filters` | ranked `Offer[]` (empty list when nothing matches, never an error) | `/api/search` |
+| `search` | `Filters` and `today` (an ISO date, supplied by the service) | ranked `Offer[]` (empty list when nothing matches, never an error) | `/api/search` |
 | `getByIds` | list of offer IDs | `Offer[]` | `/api/explain` |
 
 The model never reaches the port. Adapters translate typed filters into their own query form; no adapter accepts query strings from the model.
 
-Behaviour every adapter must share, written as one contract test suite run against each adapter:
+Behaviour every adapter must share, written as one contract test suite (`src/domain/search-offers.contract.ts`) run against each adapter. All rules are Decided (Phase 1 plan, 2026-10-15); each is a judgement, not evidence from the production index.
 
-| Behaviour | Status |
+| Behaviour | Rule |
 |---|---|
-| Expired offers hidden by default | Decided |
-| Stable order for equal ranks (for example a tiebreak on `id`) | Decided: needed for repeatable tests and e2e |
-| Ranking criteria | Open: decide in the Phase 1 plan |
-| `tier` rule (does `plus` include Standard offers) | Open |
-| `categories` any-of or all-of | Open |
-| `region` matching (exact, case-insensitive, substring) | Open |
-| `maxPricePerPerson` against `typicalPricePerPerson`, and offers with no price | Open |
-| Fields searched by `keywords` | Open |
+| Combining filters | Every supplied filter must match (and); an absent or empty filter is no constraint |
+| `categories` | Any-of. An offer has a single category, so all-of could never match two |
+| `tier` | The member's tier: `standard` returns Standard offers only; `plus` returns Standard and Plus offers; absent returns all. Basis: the company profile lists Standard benefits under both tiers |
+| `audience` | The offer's audience list contains the value |
+| `region` | Trimmed, case-insensitive equality. Offers with region `UK-wide` match every region filter. No substring or alias matching |
+| `maxPricePerPerson` | Inclusive: `typicalPricePerPerson <= max`. Price is required, so a free offer has price `0` and passes every limit |
+| `keywords` | Any-of; case-insensitive substring over `title` and `partner` only |
+| Expiry | Offers with `expiryDate < today` are hidden; an offer is valid through its expiry date. There is no option to include expired offers |
+| Clock | `today` is an argument, so adapters read no clock and tests need no fake timers |
+| Ranking | Keywords matched (more first), then estimated annual saving `typicalSavingPerUse × assumedUsesPerYear` (higher first), then `id` ascending. Annual saving is compared in whole pence so adapters cannot disagree on float ties |
+| `getByIds` | Known offers, each once, ordered by `id` ascending; unknown IDs omitted; expired offers still returned (a lookup, not a search) |
 
 A search-service-backed adapter would support only the fields evidenced in that index ([ADR-004](adr/004-data-layer.md) evidence; category, expiry and probably tier). That limit belongs to the adapter, not the port.
 
