@@ -19,6 +19,7 @@
     "test:integration": "vitest run -c vitest.integration.config.mts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
     "next": "16.4.1",
     "pg": "8.23.1",
     "react": "19.3.0",

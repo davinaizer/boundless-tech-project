@@ -39,4 +39,36 @@ describe("parseEnv", () => {
     expect(message).not.toBe("");
     expect(message).not.toContain(secret);
   });
+
+  it("defaults AI_PROVIDER to mock when unset or empty", () => {
+    expect(parseEnv({ ...version }).AI_PROVIDER).toBe("mock");
+    expect(parseEnv({ ...version, AI_PROVIDER: "" }).AI_PROVIDER).toBe("mock");
+  });
+
+  it("rejects an unknown AI_PROVIDER", () => {
+    expect(() => parseEnv({ ...version, AI_PROVIDER: "openai" })).toThrow();
+  });
+
+  it("requires ANTHROPIC_API_KEY when AI_PROVIDER is anthropic", () => {
+    expect(() => parseEnv({ ...version, AI_PROVIDER: "anthropic" })).toThrow();
+    expect(() =>
+      parseEnv({ ...version, AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: "" }),
+    ).toThrow();
+    const key = "test-key";
+    expect(
+      parseEnv({ ...version, AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: key }).ANTHROPIC_API_KEY,
+    ).toBe(key);
+  });
+
+  it("does not put the API key in the error message", () => {
+    const secret = "sk-sentinel-key";
+    let message = "";
+    try {
+      parseEnv({ ...version, AI_PROVIDER: "openai", ANTHROPIC_API_KEY: secret });
+    } catch (error) {
+      message = String(error);
+    }
+    expect(message).not.toBe("");
+    expect(message).not.toContain(secret);
+  });
 });

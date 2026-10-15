@@ -12,7 +12,7 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 - [x] `GET /api/health` returning status and version (request-time via `connection()`)
 - [x] App version string `v<package>+<build>.<short sha>` computed at build time in `next.config.ts`; build number from the git commit count, `v<package>+dev` when git is unavailable. CI checks out full history (`fetch-depth: 0`). `src/lib/env.ts` now exists with this one variable and Zod; Phase 1 extends it
 - [x] `.gitignore` cleaned for this stack (earlier-project leftovers removed; Playwright output paths are its documented defaults, confirmed when the Playwright item runs)
-- [x] Oxlint `no-restricted-imports` boundaries and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md), [ADR-012](adr/012-oxc-lint-and-format.md)). Verified with throwaway fixtures (2026-10-15): per-folder overrides, the domain-imports-nothing rule, the SDK-only-in-`src/lib/ai` rule (`@anthropic-ai/sdk`, revisit when the client is chosen) and `process.env` only in `src/lib/env.ts` all fail the lint; overlapping overrides replace each other, so domain repeats the SDK rule. Vitest aliases `server-only` to a stub and `@/` to `src`, and sets `NEXT_PUBLIC_APP_VERSION`
+- [x] Oxlint `no-restricted-imports` boundaries and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md), [ADR-012](adr/012-oxc-lint-and-format.md)). Verified with throwaway fixtures (2026-10-15): per-folder overrides, the domain-imports-nothing rule, the SDK-only-in-`src/lib/ai` rule (`@anthropic-ai/sdk`, confirmed when the client was built) and `process.env` only in `src/lib/env.ts` all fail the lint; overlapping overrides replace each other, so domain repeats the SDK rule. Vitest aliases `server-only` to a stub and `@/` to `src`, and sets `NEXT_PUBLIC_APP_VERSION`
 
 **Done when:** CI is green on an empty app and `pnpm db:up` starts a local database.
 
@@ -36,7 +36,7 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 
 ## Phase 2: AI layer (2h25)
 
-- [ ] `lib/ai` client for Claude Haiku 5.5 with structured output; mock provider
+- [x] `lib/ai` client for Claude Haiku 5.5 with structured output; mock provider. Built with `@anthropic-ai/sdk@0.133.0` (`src/lib/ai/`: `client.ts`, `mock.ts`, `types.ts`, `index.ts`). One structured-output call with a caller-supplied JSON schema, returning `unknown` data for the service to re-validate, token usage, and a failure reason (`refusal`, `truncated`, `invalid_json`, `unavailable`) from `stop_reason` and SDK errors. Effort `low` with adaptive thinking (a heuristic, tuned by the eval); SDK retries off (`maxRetries: 0`) so the services own the one retry; credential, host and log level pinned so ambient `ANTHROPIC_*` variables cannot change them (`ANTHROPIC_CUSTOM_HEADERS` is still read; the SDK has no option to stop it). `getAiClient()` picks the provider from `AI_PROVIDER` (`mock` by default; `anthropic` needs `ANTHROPIC_API_KEY`); the mock plays scripted results and, unscripted, answers like an unreachable model. 18 unit tests. One live call checked 2026-10-15 with a simplified schema: schema-valid JSON, 326 input and 48 output tokens, about 2 to 3 s (two samples, not a latency measure)
 - [ ] `PROMPT_VERSION` constant, recorded in eval output
 - [ ] Timeout on model calls (set in config, a heuristic tuned from logged latency); a timeout counts as a failed attempt
 - [ ] `interpretQuery` with Zod re-validation, one retry, keyword fallback, no call on empty input

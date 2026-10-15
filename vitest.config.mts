@@ -14,7 +14,13 @@ export default defineConfig({
     // env.ts parses at import time; tests get a fixed value instead of the build-time one.
     // DATABASE_URL is blanked (env.ts reads "" as unset) so a URL exported in the
     // shell cannot move unit tests onto Postgres; the integration config sets it.
-    env: { NEXT_PUBLIC_APP_VERSION: "v0.0.0+test", DATABASE_URL: "" },
+    // The AI variables are blanked the same way, so unit tests always get the mock.
+    env: {
+      NEXT_PUBLIC_APP_VERSION: "v0.0.0+test",
+      DATABASE_URL: "",
+      AI_PROVIDER: "",
+      ANTHROPIC_API_KEY: "",
+    },
     include: ["src/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],
     passWithNoTests: true,
