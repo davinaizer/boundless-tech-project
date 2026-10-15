@@ -84,7 +84,8 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 Eval-only: nothing in the runtime or the routes depends on these. Done before Phase 5 so the README can quote the numbers. If time is short, drop the second task first; the deterministic grounding check already guards the explain step.
 
-- [ ] No-LLM baseline in the eval: score `keywordFallback` over `EVAL_CASES` and print a "keywords only" column next to the model's result, so the eval shows what the model adds. Record it in [eval-results](eval-results.md)
+- [x] No-LLM baseline in the eval: score `keywordFallback` over `EVAL_CASES` and print a "keywords only" column next to the model's result, so the eval shows what the model adds. Record it in [eval-results](eval-results.md). Built 2026-10-15: `scoreBaseline` in `evals/score.ts` (unit tested), a "Keywords only" column in `pnpm eval`; one run recorded: model 19/20, keywords only 7/20. The set also gained `cheap-family-brighton` (`BUGS.md`), which fails with `maxPricePerPerson: 0`
+- [ ] Fix `maxPricePerPerson: 0` for a vague price word ("cheap") found by `cheap-family-brighton` in the eval and `BUGS.md`: decide between a prompt change and a boundary guard under [ADR-002](adr/002-ai-boundary.md), then re-run the eval and record it. Added 2026-10-15 from the eval run
 - [ ] Judge-graded eval for `explainResults`: a fixed set of filter and offer inputs, a rubric scored by a judge model (uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer), run on demand with the prompt version recorded. State its limits in `eval-results.md`: one model family grades itself, a small set, and a judge is a signal, not a measure
 
 **Done when:** a run is recorded in `eval-results.md` with both additions, or the second task is dropped and the reason recorded.

@@ -1,5 +1,5 @@
 import { EVAL_CASES } from "./cases";
-import { scoreCase } from "./score";
+import { scoreBaseline, scoreCase } from "./score";
 
 // On-demand eval of the interpret step against the real model (ADR-007). Run
 // with `pnpm eval`; it costs a few cents at most and is never run in CI. It
@@ -20,6 +20,7 @@ type Row = {
   query: string;
   pass: boolean;
   note: string;
+  baseline: boolean;
   source: "llm" | "fallback";
   offers: number;
   ms: number;
@@ -38,9 +39,12 @@ async function main(): Promise<void> {
   }
   const { MODEL } = await import("@/lib/ai/client");
   const { findOffers } = await import("@/services/find-offers");
-  const { interpretQuery } = await import("@/services/interpret-query");
+  const { interpretQuery, keywordFallback } = await import("@/services/interpret-query");
   const { PROMPT_VERSION } = await import("@/services/prompt-version");
 
+  const baselines = new Map(
+    scoreBaseline(EVAL_CASES, keywordFallback).map(({ id, verdict }) => [id, verdict.pass]),
+  );
   const rows: Row[] = [];
   for (const { id, query, expect } of EVAL_CASES) {
     const start = Date.now();
@@ -54,6 +58,7 @@ async function main(): Promise<void> {
       query,
       pass: verdict.pass,
       note: fallbackNote + (verdict.pass ? "" : verdict.reasons.join("; ")),
+      baseline: baselines.get(id) === true,
       source: result.source,
       offers: offers.length,
       ms,
@@ -63,6 +68,7 @@ async function main(): Promise<void> {
   }
 
   const passed = rows.filter((row) => row.pass).length;
+  const baselinePassed = rows.filter((row) => row.baseline).length;
   const fallbacks = rows.filter((row) => row.source === "fallback").length;
   const found = rows.filter((row) => row.offers > 0).length;
   const slowest = rows.reduce((a, b) => (b.ms > a.ms ? b : a));
@@ -76,15 +82,17 @@ async function main(): Promise<void> {
     `- Model: \`${MODEL}\``,
     `- Catalogue date for result counts: ${TODAY}`,
     `- **Parse pass rate: ${passed}/${rows.length}**`,
+    `- Keywords-only baseline (\`keywordFallback\`, no model): ${baselinePassed}/${rows.length}`,
     `- Cases that used the keyword fallback: ${fallbacks}`,
     `- Cases whose filters found at least one offer: ${found}/${rows.length}`,
     `- Tokens: ${sum("inputTokens")} in, ${sum("outputTokens")} out`,
     `- Slowest case: ${slowest.id}, ${slowest.ms} ms`,
     "",
-    "| Case | Result | Offers | Note |",
-    "|---|---|---|---|",
+    "| Case | Result | Keywords only | Offers | Note |",
+    "|---|---|---|---|---|",
     ...rows.map(
-      (row) => `| ${row.id} | ${row.pass ? "pass" : "FAIL"} | ${row.offers} | ${cell(row.note)} |`,
+      (row) =>
+        `| ${row.id} | ${row.pass ? "pass" : "FAIL"} | ${row.baseline ? "pass" : "FAIL"} | ${row.offers} | ${cell(row.note)} |`,
     ),
   ];
   console.log(lines.join("\n"));
