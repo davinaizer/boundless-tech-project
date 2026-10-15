@@ -1,6 +1,6 @@
 # ADR-009: Next.js structure and conventions
 
-- **Status:** Accepted
+- **Status:** Accepted. The ESLint wording in rule 6 is superseded by [ADR-012](012-oxc-lint-and-format.md); the rules stand.
 - **Date:** 2026-10-15
 - **Decision owner:** Davi
 

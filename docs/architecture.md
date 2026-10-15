@@ -111,7 +111,7 @@ sequenceDiagram
 | AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK |
 | Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain |
 
-Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by ESLint.
+Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by Oxlint.
 
 ## Folder structure
 
@@ -147,10 +147,10 @@ boundless-tech-test/
 |-- AGENTS.md, DESIGN.md, README.md
 |-- compose.yaml                 local Postgres (Podman or Docker)
 |-- .env.example                 dev-only values, no secrets
-`-- package.json, tsconfig.json, next.config.ts, eslint config, vitest config, playwright config
+`-- package.json, tsconfig.json, next.config.ts, oxlint and oxfmt config, vitest config, playwright config
 ```
 
-Conventions inside `src/`, from ADR-009: components are `PascalCase.tsx`, all other files `kebab-case.ts`, and the import boundaries are enforced by ESLint.
+Conventions inside `src/`, from ADR-009: components are `PascalCase.tsx`, all other files `kebab-case.ts`, and the import boundaries are enforced by Oxlint.
 
 Proposals:
 - Unit tests sit beside the code as `*.test.ts`. Integration tests sit beside it as `*.integration.test.ts` and run with `pnpm test:integration`. The contract test suite for the port lives with the port in `src/domain` and is imported by each adapter's integration test.

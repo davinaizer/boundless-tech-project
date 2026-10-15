@@ -1,6 +1,6 @@
 # ADR-003: Stack and hosting
 
-- **Status:** Accepted. The hosting decision is superseded by [ADR-011](011-local-first-delivery.md); the stack decision stands.
+- **Status:** Accepted. The hosting decision is superseded by [ADR-011](011-local-first-delivery.md); the stack decision stands, except ESLint and Prettier, superseded by [ADR-012](012-oxc-lint-and-format.md).
 - **Date:** 2026-10-14
 - **Decision owner:** Davi
 

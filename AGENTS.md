@@ -47,7 +47,7 @@ Workflow per task: **plan → implement → review → complete**, using the ski
 
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`). AI-assisted commits carry a `Co-Authored-By` trailer.
 - **TypeScript:** strict mode. Validate all external input at the boundary with Zod.
-- **Next.js:** rules in [ADR-009](docs/adr/009-nextjs-conventions.md). In short: `app/` is for routing; Server Components by default and `"use client"` only on small leaves; `server-only` on services, AI client and data; env vars read only in `src/lib/env.ts`; create no folder before it has content. Import boundaries are enforced by ESLint, so a failing lint is a rule violation, not a style issue.
+- **Next.js:** rules in [ADR-009](docs/adr/009-nextjs-conventions.md). In short: `app/` is for routing; Server Components by default and `"use client"` only on small leaves; `server-only` on services, AI client and data; env vars read only in `src/lib/env.ts`; create no folder before it has content. Import boundaries are enforced by Oxlint ([ADR-012](docs/adr/012-oxc-lint-and-format.md)), so a failing lint is a rule violation, not a style issue.
 - **AI boundary:** the model only produces filters and explanations over retrieved data. It never produces offers, prices, savings or terms ([ADR-002](docs/adr/002-ai-boundary.md)).
 - **Sample data:** fictional partner names and labelled sample terms. No real brands attached to invented figures.
 - **Secrets:** API keys in environment variables, server-side only. Never committed.

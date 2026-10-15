@@ -27,3 +27,4 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [009](009-nextjs-conventions.md) | Next.js structure and conventions | Accepted |
 | [010](010-postgres-data-layer.md) | Postgres adapter behind the search port | Accepted |
 | [011](011-local-first-delivery.md) | Local-first delivery, Podman, deployment at a gate | Accepted |
+| [012](012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting | Accepted |

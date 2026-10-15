@@ -4,15 +4,15 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 ## Phase 0: Setup and governance (1h20)
 
-- [ ] Scaffold Next.js (App Router), TypeScript strict, Tailwind
-- [ ] ESLint, Prettier, Vitest, Playwright config, `pnpm check` and `pnpm e2e`
+- [x] Scaffold Next.js (App Router), TypeScript strict, Tailwind
+- [ ] Oxlint, Oxfmt ([ADR-012](adr/012-oxc-lint-and-format.md)), Vitest, Playwright config, `pnpm check` and `pnpm e2e`
 - [ ] GitHub Actions: typecheck, lint, unit, e2e
 - [ ] `compose.yaml` for local Postgres with a fully qualified image; confirm the `podman compose` provider works on the author's machine and the Postgres major version ([ADR-011](adr/011-local-first-delivery.md)); fall back to `podman run` scripts if not. `pnpm db:up` and `db:down`; `.env.example` with dev-only values
 - [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
 - [ ] `GET /api/health` returning status and version
 - [ ] App version string `v<package>+<build>.<short sha>` computed at build time; build number from the git commit count, falling back to `dev`
 - [ ] `.gitignore` cleaned for this stack
-- [ ] ESLint `no-restricted-imports` boundaries and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
+- [ ] Oxlint `no-restricted-imports` boundaries (confirm per-folder overrides and a `process.env` restriction work, [ADR-012](adr/012-oxc-lint-and-format.md)) and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
 
 **Done when:** CI is green on an empty app and `pnpm db:up` starts a local database.
 
@@ -52,6 +52,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] UI: query box, editable chips, results, savings, loading, empty and error states
 - [ ] Accessibility basics: labels, focus order, contrast, keyboard use of chips
 - [ ] Filters serialised into the URL query string; decide server or client reading (server `searchParams` makes the route dynamic) and record it in ADR-009 follow-up
+- [ ] Scaffold defaults kept (`create-next-app` 16.4.1): `cacheComponents: true` and `partialPrefetching: true`, so dynamic reads such as `searchParams` need `<Suspense>`. Revert is removing the two lines in `next.config.ts`. Phase 3 confirms or reverts when it records the server or client filter-reading decision ([ADR-009](adr/009-nextjs-conventions.md) rule 13)
 - [ ] `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`
 - [ ] Input cap, and a content-type and body-size check before parsing (the rate limit moves to the optional deploy phase)
 - [ ] One error shape from all endpoints, `{ error: { code, message, requestId } }`, with codes defined in `src/domain` and mapped to UI error states; no internals in messages ([architecture](architecture.md))
@@ -80,7 +81,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 Gate: Phases 0 to 5 complete and the demo recorded ([ADR-011](adr/011-local-first-delivery.md)).
 
 - [ ] Check pnpm detection on Netlify, database connectivity from a function, and the commit variable for the version string; use Vercel and record the reason if Netlify does not work
-- [ ] Confirm the pinned Next.js version and `proxy.ts` use against the Netlify adapter docs ([ADR-009](adr/009-nextjs-conventions.md) rule 15)
+- [ ] Confirm the pinned Next.js version and `proxy.ts` use against the Netlify adapter docs ([ADR-009](adr/009-nextjs-conventions.md) rule 15). Read 2026-10-15 for the scaffold pin (`next@16.4.1`): the page says the adapter supports 13.5 onward, is tested with every new stable release, and lists Cache Components and Turbopack as fully supported. It names no 16.x version and does not mention `proxy.ts`, so 16.4.1 is not verified on Netlify until the deploy spike.
 - [ ] Rate limit (best effort) and provider spend limit ([ADR-006](adr/006-demo-protection.md))
 - [ ] Deploy; smoke test against `/api/health`; add the link to the README
 
