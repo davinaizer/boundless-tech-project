@@ -132,7 +132,7 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | 1 | 3h40 | 1h47 (recorded by the author) |
 | 2 | 2h25 | 2h (recorded by the author) |
 | 2.1 | 0h50 | |
-| 3 | 2h05 | |
+| 3 | 2h05 | 53 min (recorded by the author) |
 | 4 | 0h40 | |
 | 4.1 (optional) | 0.75h | |
 | 5 | 1h | |
