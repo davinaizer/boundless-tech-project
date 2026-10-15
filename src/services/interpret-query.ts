@@ -2,13 +2,19 @@ import "server-only";
 import { FILTER_LIMITS, Filters } from "@/domain/filters";
 import { Audience, Category, Tier } from "@/domain/offer";
 import { UK_REGIONS } from "@/domain/search-offers";
-import { getAiClient, type AiClient, type ModelUsage } from "@/lib/ai";
+import { getAiClient, type AiClient, type ModelUsage, type StructuredFailure } from "@/lib/ai";
+
+// The model answered, but with something Filters does not accept.
+export type InterpretFailure = StructuredFailure | "invalid_filters";
 
 export type Interpretation = {
   filters: Filters;
   source: "llm" | "fallback";
   modelCalls: number;
   usage: ModelUsage;
+  // Why the last attempt failed. Set only when source is "fallback" after at least
+  // one model call; a retry that recovers leaves it out (modelCalls is then 2).
+  failure?: InterpretFailure;
 };
 
 // Changing the prompt, the schema or MAX_TOKENS bumps PROMPT_VERSION
@@ -63,8 +69,9 @@ export function keywordFallback(query: string): Filters {
 }
 
 // The query is assumed to have passed the route's length cap (ADR-006). Empty
-// input makes no model call; any failed attempt is retried once, then the
-// keyword fallback is used (ADR-002).
+// input makes no model call; a failed attempt is retried once, then the keyword
+// fallback is used (ADR-002). A provider rejection of the request is not
+// retried: the same call would be rejected again.
 export async function interpretQuery(
   query: string,
   ai: AiClient = getAiClient(),
@@ -72,6 +79,7 @@ export async function interpretQuery(
   const text = query.trim();
   const usage: ModelUsage = { inputTokens: 0, outputTokens: 0 };
   let modelCalls = 0;
+  let failure: InterpretFailure | undefined;
   if (text !== "") {
     for (let attempt = 0; attempt < 2; attempt++) {
       modelCalls++;
@@ -85,10 +93,21 @@ export async function interpretQuery(
         usage.inputTokens += result.usage.inputTokens;
         usage.outputTokens += result.usage.outputTokens;
       }
-      if (!result.ok) continue;
+      if (!result.ok) {
+        failure = result.reason;
+        if (result.reason === "rejected") break;
+        continue;
+      }
       const parsed = Filters.safeParse(result.data);
       if (parsed.success) return { filters: parsed.data, source: "llm", modelCalls, usage };
+      failure = "invalid_filters";
     }
   }
-  return { filters: keywordFallback(text), source: "fallback", modelCalls, usage };
+  return {
+    filters: keywordFallback(text),
+    source: "fallback",
+    modelCalls,
+    usage,
+    ...(failure && { failure }),
+  };
 }

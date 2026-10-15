@@ -13,15 +13,18 @@ export type StructuredRequest = {
 
 export type ModelUsage = { inputTokens: number; outputTokens: number };
 
-// Every way a call can fail to give usable JSON. The services treat each one as
-// a failed attempt (retry once, then fall back); none of them is an error response.
+// Every way a call can fail to give usable JSON; none of them is an error response.
 // "timeout" is kept apart from "unavailable" so the timeout can be tuned from logs.
+// "rejected" is the provider refusing the request itself (HTTP 400, 401, 403 or
+// 404: a wrong key, a retired model ID, a schema it will not take). Repeating the
+// call cannot help, so the services do not retry it; the others get one retry.
 export type StructuredFailure =
   | "refusal"
   | "truncated"
   | "invalid_json"
   | "unavailable"
-  | "timeout";
+  | "timeout"
+  | "rejected";
 
 export type StructuredResult =
   | { ok: true; data: unknown; usage: ModelUsage }

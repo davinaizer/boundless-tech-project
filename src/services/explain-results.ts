@@ -8,7 +8,10 @@ import {
   type Explanation,
 } from "@/domain/match-reasons";
 import type { SearchOffers } from "@/domain/search-offers";
-import { getAiClient, type AiClient, type ModelUsage } from "@/lib/ai";
+import { getAiClient, type AiClient, type ModelUsage, type StructuredFailure } from "@/lib/ai";
+
+// The model answered, but groundExplanations rejected the answer (or it had no lines).
+export type ExplainFailure = StructuredFailure | "ungrounded";
 
 export type Explanations = {
   explanations: Explanation[];
@@ -16,6 +19,9 @@ export type Explanations = {
   source: "llm" | "fallback";
   modelCalls: number;
   usage: ModelUsage;
+  // Why the call gave no usable lines. Set only when source is "fallback" after a
+  // model call; no call (no offers found) leaves it out.
+  failure?: ExplainFailure;
 };
 
 export type ExplainDeps = { ai?: AiClient; offers?: SearchOffers };
@@ -100,6 +106,7 @@ export async function explainResults(
     usage.inputTokens += result.usage.inputTokens;
     usage.outputTokens += result.usage.outputTokens;
   }
+  const failure: ExplainFailure = result.ok ? "ungrounded" : result.reason;
   if (result.ok) {
     const grounded = groundExplanations(
       result.data,
@@ -110,5 +117,11 @@ export async function explainResults(
       return { explanations: withFallback(lines), source: "llm", modelCalls: 1, usage };
     }
   }
-  return { explanations: withFallback(new Map()), source: "fallback", modelCalls: 1, usage };
+  return {
+    explanations: withFallback(new Map()),
+    source: "fallback",
+    modelCalls: 1,
+    usage,
+    failure,
+  };
 }

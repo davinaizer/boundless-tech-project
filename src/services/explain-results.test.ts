@@ -112,6 +112,14 @@ describe("explainResults", () => {
     ]);
   });
 
+  it("leaves failure out on success and when no call is made", async () => {
+    const ok = scripted(answer({ explanations: [{ offerId: one.id, text: "A London table." }] }));
+    const lines = await explainResults(filters, [one.id], { ai: ok, offers: portWith([one]) });
+    expect(lines).not.toHaveProperty("failure");
+    const none = await explainResults(filters, [], { ai: scripted(), offers: portWith([one]) });
+    expect(none).not.toHaveProperty("failure");
+  });
+
   it("rejects the whole answer for an unknown ID, with one call and no retry", async () => {
     const ai = scripted(
       answer({
@@ -130,6 +138,7 @@ describe("explainResults", () => {
       source: "fallback",
       modelCalls: 1,
       usage,
+      failure: "ungrounded",
     });
     expect(ai.calls).toHaveLength(1);
   });
@@ -140,16 +149,18 @@ describe("explainResults", () => {
       const result = await explainResults(filters, [one.id], { ai, offers: portWith([one]) });
       expect(result.explanations).toEqual([fallback(one)]);
       expect(result.source).toBe("fallback");
+      expect(result.failure).toBe("ungrounded");
     }
   });
 
-  it("uses the deterministic lines after any failed call, with one call and no retry", async () => {
+  it("uses the deterministic lines after any failed call, reporting the reason", async () => {
     const reasons: StructuredFailure[] = [
       "refusal",
       "truncated",
       "invalid_json",
       "unavailable",
       "timeout",
+      "rejected",
     ];
     for (const reason of reasons) {
       const ai = scripted({ ok: false, reason });
@@ -159,6 +170,7 @@ describe("explainResults", () => {
         source: "fallback",
         modelCalls: 1,
         usage: { inputTokens: 0, outputTokens: 0 },
+        failure: reason,
       });
       expect(ai.calls).toHaveLength(1);
     }
@@ -173,7 +185,7 @@ describe("explainResults", () => {
   it("treats an answer with no lines as a failure", async () => {
     const ai = scripted(answer({ explanations: [] }));
     const result = await explainResults(filters, [one.id], { ai, offers: portWith([one]) });
-    expect(result).toMatchObject({ source: "fallback", modelCalls: 1 });
+    expect(result).toMatchObject({ source: "fallback", modelCalls: 1, failure: "ungrounded" });
     expect(result.explanations).toEqual([fallback(one)]);
   });
 

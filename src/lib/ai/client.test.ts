@@ -105,10 +105,12 @@ describe("createAnthropicClient", () => {
     });
   });
 
-  it("reports SDK errors (connection, API status, abort) as unavailable", async () => {
+  it("reports SDK errors (connection, overload, rate limit, server, abort) as unavailable", async () => {
     const errors = [
       new Anthropic.APIConnectionError({ message: "offline" }),
       new Anthropic.APIUserAbortError(),
+      Anthropic.APIError.generate(429, undefined, "slow down", new Headers()),
+      Anthropic.APIError.generate(500, undefined, "oops", new Headers()),
       Anthropic.APIError.generate(529, undefined, "overloaded", new Headers()),
     ];
     for (const error of errors) {
@@ -116,6 +118,17 @@ describe("createAnthropicClient", () => {
       expect(await client.generateStructured(request)).toEqual({
         ok: false,
         reason: "unavailable",
+      });
+    }
+  });
+
+  it("reports a request the provider refuses (400, 401, 403, 404) as rejected", async () => {
+    for (const status of [400, 401, 403, 404]) {
+      const error = Anthropic.APIError.generate(status, undefined, "no", new Headers());
+      const { client } = clientReturning(error);
+      expect(await client.generateStructured(request)).toEqual({
+        ok: false,
+        reason: "rejected",
       });
     }
   });

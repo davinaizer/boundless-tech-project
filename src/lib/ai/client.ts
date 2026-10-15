@@ -12,6 +12,10 @@ const EFFORT = "low";
 
 type MessagesApi = Pick<Anthropic["messages"], "create">;
 
+// Statuses that say the request itself is wrong, not that the service is down
+// (bad request, bad key, no permission, unknown model). 429 and 5xx stay "unavailable".
+const REJECTED_STATUSES: ReadonlySet<number> = new Set([400, 401, 403, 404]);
+
 // No SDK retries: the services own the single retry (ADR-002), and SDK retries
 // would multiply both the model calls and the wall-clock time of a timeout.
 // The SDK falls back to process.env for any option left undefined, so the
@@ -54,7 +58,12 @@ export function createAnthropicClient(
         // Network, API status and abort errors all mean "no answer". Anything
         // else is a bug in this code and must not be hidden behind the fallback.
         if (error instanceof Anthropic.AnthropicError) {
-          return { ok: false, reason: timeout.aborted ? "timeout" : "unavailable" };
+          if (timeout.aborted) return { ok: false, reason: "timeout" };
+          const rejected =
+            error instanceof Anthropic.APIError &&
+            error.status !== undefined &&
+            REJECTED_STATUSES.has(error.status);
+          return { ok: false, reason: rejected ? "rejected" : "unavailable" };
         }
         throw error;
       }

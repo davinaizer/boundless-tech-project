@@ -71,12 +71,14 @@ describe("interpretQuery", () => {
   it("makes no model call for empty or whitespace input", async () => {
     for (const query of ["", "   \n\t"]) {
       const ai = scripted();
-      expect(await interpretQuery(query, ai)).toEqual({
+      const result = await interpretQuery(query, ai);
+      expect(result).toEqual({
         filters: Filters.parse({}),
         source: "fallback",
         modelCalls: 0,
         usage: { inputTokens: 0, outputTokens: 0 },
       });
+      expect(result).not.toHaveProperty("failure");
       expect(ai.calls).toHaveLength(0);
     }
   });
@@ -124,7 +126,8 @@ describe("interpretQuery", () => {
     expect(result.usage).toEqual(usage);
   });
 
-  it("falls back to keywords after two failures of any kind", async () => {
+  it("falls back to keywords after two failures, reporting the reason", async () => {
+    // "rejected" is not retried; it has its own test below.
     const reasons: StructuredFailure[] = [
       "refusal",
       "truncated",
@@ -139,8 +142,46 @@ describe("interpretQuery", () => {
         source: "fallback",
         modelCalls: 2,
         usage: { inputTokens: 0, outputTokens: 0 },
+        failure: reason,
       });
     }
+  });
+
+  it("reports the reason of the last failed attempt", async () => {
+    const ai = scripted({ ok: false, reason: "timeout" }, { ok: false, reason: "refusal" });
+    expect((await interpretQuery("cinema", ai)).failure).toBe("refusal");
+  });
+
+  it("reports invalid_filters when the answer does not fit Filters twice", async () => {
+    const ai = scripted(answer({ categories: ["casino"] }), answer("not an object"));
+    expect(await interpretQuery("cinema", ai)).toMatchObject({
+      source: "fallback",
+      modelCalls: 2,
+      failure: "invalid_filters",
+    });
+  });
+
+  it("does not retry a request the provider rejected", async () => {
+    const ai = scripted({ ok: false, reason: "rejected" });
+    expect(await interpretQuery("cheap cinema in Leeds", ai)).toEqual({
+      filters: Filters.parse({ keywords: ["cheap", "cinema", "leeds"] }),
+      source: "fallback",
+      modelCalls: 1,
+      usage: { inputTokens: 0, outputTokens: 0 },
+      failure: "rejected",
+    });
+    expect(ai.calls).toHaveLength(1);
+  });
+
+  it("leaves failure out on success, including after a retry that recovers", async () => {
+    const first = await interpretQuery("spa", scripted(answer({ keywords: ["spa"] })));
+    expect(first).not.toHaveProperty("failure");
+    const retried = await interpretQuery(
+      "spa",
+      scripted({ ok: false, reason: "unavailable" }, answer({ keywords: ["spa"] })),
+    );
+    expect(retried).toMatchObject({ source: "llm", modelCalls: 2 });
+    expect(retried).not.toHaveProperty("failure");
   });
 
   it("counts the usage of failed calls that the model answered", async () => {
