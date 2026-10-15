@@ -10,6 +10,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
 | Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, e2e and eval. Phases 0 to 4.1 done; Phase 5 (this README, the demo) in progress. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Live demo | [https://boundless-benefits-finder.netlify.app/](https://boundless-benefits-finder.netlify.app/) on Netlify. The footer and `/api/health` show the deployed version; it is the last deployed build, not necessarily the tip of `develop` |
 | Recorded demo | Pending: link will be added here. It is recorded after the optional deploy phase, from the live app if there is one, otherwise locally ([ADR-015](docs/adr/015-demo-recorded-after-deploy.md)) |
 
 ## The idea in 30 seconds
@@ -50,7 +51,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | CI | GitHub Actions |
 | Data | Fictional sample catalogue behind a `SearchOffers` port: Postgres adapter when `DATABASE_URL` is set, in-memory adapter otherwise ([ADR-010](docs/adr/010-postgres-data-layer.md)) |
 | Local services | Podman runs Postgres from a Compose file; the app runs with `pnpm dev` ([ADR-011](docs/adr/011-local-first-delivery.md)) |
-| Hosting | Local-first. If deployed: Netlify, with Vercel as fallback ([ADR-011](docs/adr/011-local-first-delivery.md)) |
+| Hosting | Local-first, deployed on Netlify ([live site](https://boundless-benefits-finder.netlify.app/)); Vercel was the fallback and is not used ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 ## Where to look
 
