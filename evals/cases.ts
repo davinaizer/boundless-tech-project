@@ -105,4 +105,10 @@ export const EVAL_CASES: readonly EvalCase[] = [
     expect: {},
   },
   { id: "vague", query: "something nice for the weekend", expect: {} },
+  // Added before the prompt was tightened for out-of-schema queries, with
+  // wording different from the case that failed (docs/eval-results.md).
+  { id: "out-of-schema-cat", query: "somewhere fun for my cat", expect: {} },
+  { id: "not-an-offer-question", query: "what's the capital of France", expect: {} },
+  { id: "mood-surprise-me", query: "I'm bored, surprise me", expect: {} },
+  { id: "something-tomorrow", query: "something to do tomorrow", expect: {} },
 ];

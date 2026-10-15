@@ -15,12 +15,13 @@ export type Interpretation = {
 // (src/services/prompt-version.ts).
 export const INTERPRET_SYSTEM_PROMPT = `You turn a member's request for UK leisure offers into search filters.
 Fill a field only when the request states or clearly implies it; leave every other field out.
-- categories: any of ${Category.options.join(", ")}. Cinemas, gardens, attractions and days out are days-out; theatre, comedy and concerts are events; restaurants and cafes are dining; hotels and flights are travel; fuel, parking and car insurance are motoring.
+Words such as "fun", "nice", "somewhere" or "something" name no category, and neither does a pet or a general question: when the request is outside these filters, return no fields except keywords.
+- categories: only what the request says is wanted, any of ${Category.options.join(", ")}. Cinemas, gardens, attractions and days out are days-out; theatre, comedy and concerts are events; restaurants and cafes are dining; hotels and flights are travel; fuel, parking and car insurance are motoring.
 - region: exactly one of ${UK_REGIONS.join(", ")}. Map a town or city to its region (Manchester is North West).
 - maxPricePerPerson: a budget in pounds per person, as a number. "Under £20 each" is 20.
-- audience: solo, couple or family.
+- audience: solo, couple or family, only when the request says who is going ("just me", "the two of us", "with the kids"). "My" or "me" on its own, or a pet, is not an audience.
 - tier: standard or plus, only when the member says which membership they have.
-- keywords: when given, an offer is found only if its title or partner name contains one of them, so use them only for a specific venue, activity or product that the other fields do not capture, such as "cinema", "spa" or "pizza". Leave out generic words for a category itself, such as "dinner", "meal", "trip" or "day out", and adjectives such as "cheap" or "romantic". A budget belongs in maxPricePerPerson.`;
+- keywords: when given, an offer is found only if its title or partner name contains one of them, so use them only for a specific venue, activity or product that the other fields do not capture, such as "cinema", "spa" or "pizza". Give one distinctive word per keyword, not a phrase, because the whole keyword must appear in the title or partner and a phrase finds fewer offers ("breakdown", not "breakdown cover"). Leave out generic words for a category itself, such as "dinner", "meal", "trip" or "day out", and adjectives such as "cheap" or "romantic". A budget belongs in maxPricePerPerson.`;
 
 // Plain JSON Schema for the model. Structured outputs reject length and number
 // limits (ADR-005), so Filters re-checks those after the call.

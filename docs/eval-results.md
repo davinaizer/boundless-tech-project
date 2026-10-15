@@ -1,6 +1,6 @@
 # Eval results
 
-Recorded runs of `pnpm eval` ([ADR-007](adr/007-test-strategy.md)): about 15 hand-written queries with expected filters, run once each against the real model. The cases are queries the author thought of, so a pass rate is a regression signal, not a measure of accuracy on real use. Each run is read next to the prompt version that produced it (`PROMPT_VERSION`, [roadmap](roadmap.md)).
+Recorded runs of `pnpm eval` ([ADR-007](adr/007-test-strategy.md)): hand-written queries with expected filters (15 at the first run, 19 since the follow-up), run against the real model, once each unless a section says otherwise. The cases are queries the author thought of, so a pass rate is a regression signal, not a measure of accuracy on real use. Each run is read next to the prompt version that produced it (`PROMPT_VERSION`, [roadmap](roadmap.md)).
 
 Method: each case passes when every field it names matches and every field it does not name is absent (extra keywords are allowed). "Offers" is how many offers the interpreted filters find with `today` pinned to 2026-10-15. Cases and scorer: `evals/cases.ts`, `evals/score.ts`.
 
@@ -34,3 +34,23 @@ Method: each case passes when every field it names matches and every field it do
 Neither failure was addressed by changing the prompt, so this run stands as the baseline for `2026-10-15.4`.
 
 **Repeat runs, same prompt (two more, after a runner-only change):** 13/15 both times, the same two cases failing. On the second repeat `out-of-schema` also invented `audience: solo`, so that case is unstable in detail though stable in outcome. Three runs are still a small sample.
+
+## 2026-10-15, prompt `2026-10-15.5` against `2026-10-15.4` (follow-up to the first run)
+
+Four cases were added before the prompt changed (`out-of-schema-cat`, `not-an-offer-question`, `mood-surprise-me`, `something-tomorrow`), so the set is now 19 cases. Each prompt was run three times on all 19, at `today` 2026-10-15.
+
+| | `2026-10-15.4` | `2026-10-15.5` |
+|---|---|---|
+| Parse pass rate, three runs | 16/19, 16/19, 16/19 | 19/19, 19/19, 19/19 |
+| Cases failing | `breakdown-cover`, `out-of-schema`, `out-of-schema-cat`, every run | none |
+| Offers found by `breakdown-cover` | 1 | 2 |
+| Offers found by `cinema-london`, `pizza-kids-manchester`, `spa-day-yorkshire` | 2, 2, 1 | 2, 2, 1 |
+| Keyword fallbacks | 0 | 0 |
+
+What changed in the prompt: a mood word, a pet or a general question names no category; an audience needs the request to say who is going; a keyword is one distinctive word, not a phrase. The scorer was not changed: "breakdown cover" really did lose one offer ("Breakdown recovery add-on, half price") against "breakdown", so the strict rule was reporting a real recall loss.
+
+**Limits of this comparison**
+- The new prompt names pets, so `out-of-schema` and `out-of-schema-cat` are no longer a clean held-out test: they are the family the rule was written for. The three other new cases already passed on `.4`, so they show no regression but no generalisation either.
+- Unrecorded probe, one run each on `.5`, queries not in the case list: "where can I take my hamster", "a gift for my goldfish" and "fun for my parrot this weekend" all returned no fields. Seven queries, one sample each.
+- One over-correction seen in that probe: "a quiet dinner for me" now gives `dining` with no audience, where "for me" could fairly be read as solo. Under-filling widens results, which was judged safer than inventing a field, but it is a trade-off and not covered by a case.
+- All 19 cases are the author's; three runs per prompt are still a small sample.
