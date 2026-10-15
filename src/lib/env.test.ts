@@ -84,4 +84,13 @@ describe("parseEnv", () => {
     expect(message).not.toBe("");
     expect(message).not.toContain(secret);
   });
+
+  it("defaults the request limits and bounds them", () => {
+    const env = parseEnv({ ...version });
+    expect(env.MAX_QUERY_CHARS).toBe(200);
+    expect(env.MAX_BODY_BYTES).toBe(4096);
+    expect(parseEnv({ ...version, MAX_QUERY_CHARS: "" }).MAX_QUERY_CHARS).toBe(200);
+    expect(() => parseEnv({ ...version, MAX_QUERY_CHARS: "0" })).toThrow();
+    expect(() => parseEnv({ ...version, MAX_BODY_BYTES: "1000000" })).toThrow();
+  });
 });

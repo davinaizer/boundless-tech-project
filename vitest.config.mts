@@ -21,6 +21,8 @@ export default defineConfig({
       AI_PROVIDER: "",
       ANTHROPIC_API_KEY: "",
       AI_TIMEOUT_MS: "",
+      MAX_QUERY_CHARS: "",
+      MAX_BODY_BYTES: "",
     },
     include: ["src/**/*.test.ts", "evals/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],

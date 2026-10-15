@@ -23,6 +23,16 @@ const schema = z
       unsetIfEmpty,
       z.coerce.number().int().positive().max(60_000).default(8000),
     ),
+    // Request limits (ADR-006). Heuristics: 200 characters is the ADR's starting
+    // value; 4096 bytes leaves room for a full filters object or ten offer IDs.
+    MAX_QUERY_CHARS: z.preprocess(
+      unsetIfEmpty,
+      z.coerce.number().int().positive().max(1000).default(200),
+    ),
+    MAX_BODY_BYTES: z.preprocess(
+      unsetIfEmpty,
+      z.coerce.number().int().positive().max(65_536).default(4096),
+    ),
   })
   .refine((value) => value.AI_PROVIDER !== "anthropic" || value.ANTHROPIC_API_KEY !== undefined, {
     message: "ANTHROPIC_API_KEY is required when AI_PROVIDER is anthropic",
@@ -41,4 +51,6 @@ export const env = parseEnv({
   AI_PROVIDER: process.env.AI_PROVIDER,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   AI_TIMEOUT_MS: process.env.AI_TIMEOUT_MS,
+  MAX_QUERY_CHARS: process.env.MAX_QUERY_CHARS,
+  MAX_BODY_BYTES: process.env.MAX_BODY_BYTES,
 });

@@ -60,14 +60,14 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 ## Phase 3: API and UI (2h05)
 
-- [ ] Route Handlers: interpret, search, explain
+- [x] Route Handlers: interpret, search, explain. Built with the input cap and the error shape as one slice: `src/app/api/{interpret,search,explain}/route.ts` over the shared `handleJson` in `src/app/api/_lib/handle-json.ts`; request and response schemas in `src/domain/api.ts`; 19 tests in `src/app/api/api.test.ts` with the mock client. A model failure answers 200 with `source: "fallback"` (interpret) or deterministic lines (explain). Not checked against a running server or the real model in this task
 - [ ] UI: query box, editable chips, results, savings, loading, empty and error states
 - [ ] Accessibility basics: labels, focus order, contrast, keyboard use of chips
 - [ ] Filters serialised into the URL query string; decide server or client reading (server `searchParams` makes the route dynamic) and record it in ADR-009 follow-up
 - [ ] Scaffold defaults kept (`create-next-app` 16.4.1): `cacheComponents: true` and `partialPrefetching: true`, so dynamic reads such as `searchParams` need `<Suspense>`. Revert is removing the two lines in `next.config.ts`. Phase 3 confirms or reverts when it records the server or client filter-reading decision ([ADR-009](adr/009-nextjs-conventions.md) rule 13)
 - [ ] `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`
-- [ ] Input cap, and a content-type and body-size check before parsing (the rate limit moves to the optional deploy phase)
-- [ ] One error shape from all endpoints, `{ error: { code, message, requestId } }`, with codes defined in `src/domain` and mapped to UI error states; no internals in messages ([architecture](architecture.md))
+- [x] Input cap, and a content-type and body-size check before parsing (the rate limit moves to the optional deploy phase). `MAX_QUERY_CHARS` (default 200, ADR-006) and `MAX_BODY_BYTES` (default 4096, a heuristic) in `env.ts`; the body is read with a byte limit, so an oversized one is refused unbuffered; `offerIds` is capped at `MAX_EXPLAINED_OFFERS` (10) and over-long lists are rejected, not truncated
+- [x] One error shape from all endpoints, `{ error: { code, message, requestId } }`, with codes defined in `src/domain` and mapped to UI error states; no internals in messages ([architecture](architecture.md)). Codes `invalid_request` (400), `unsupported_media_type` (415), `payload_too_large` (413), `internal_error` (500) in `src/domain/api.ts` with fixed messages and an `x-request-id` header; mapping to UI error states comes with the UI item
 - [ ] One structured JSON log line per request (no query text); version shown in the UI footer. The line carries the failure reason from Phase 2.1 and an estimated cost per call from token usage and a price constant (source and date of the price noted in the code; an estimate, not billing)
 - [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 

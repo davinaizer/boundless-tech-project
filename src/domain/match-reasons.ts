@@ -5,6 +5,9 @@ import { UK_WIDE_REGION } from "./search-offers";
 
 export const MAX_EXPLANATION_LENGTH = 160;
 
+// A heuristic cap on how many offers one explain call covers.
+export const MAX_EXPLAINED_OFFERS = 10;
+
 const CATEGORY_LABELS = {
   "days-out": "Days out",
   dining: "Dining",

@@ -2,6 +2,7 @@ import "server-only";
 import { getSearchOffers } from "@/data";
 import type { Filters } from "@/domain/filters";
 import {
+  MAX_EXPLAINED_OFFERS,
   MAX_EXPLANATION_LENGTH,
   describeMatch,
   groundExplanations,
@@ -26,8 +27,8 @@ export type Explanations = {
 
 export type ExplainDeps = { ai?: AiClient; offers?: SearchOffers };
 
-// A heuristic cap on how many offers one call explains.
-export const MAX_EXPLAINED_OFFERS = 10;
+// Defined in the domain, where the request schema needs it too.
+export { MAX_EXPLAINED_OFFERS };
 
 // A heuristic: low-effort adaptive thinking counts toward it. A live call with
 // 10 offers used 1292 output tokens (2026-10-15), so 3000 leaves room; a cut-off
