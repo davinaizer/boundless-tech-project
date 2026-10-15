@@ -3,7 +3,13 @@ import { FILTER_LIMITS, Filters } from "@/domain/filters";
 import { Audience, Category, Tier } from "@/domain/offer";
 import { createMockAiClient, type MockResponder } from "@/lib/ai/mock";
 import type { StructuredFailure, StructuredResult } from "@/lib/ai";
-import { INTERPRET_SCHEMA, interpretQuery, keywordFallback } from "./interpret-query";
+import { UK_REGIONS } from "@/domain/search-offers";
+import {
+  INTERPRET_SCHEMA,
+  INTERPRET_SYSTEM_PROMPT,
+  interpretQuery,
+  keywordFallback,
+} from "./interpret-query";
 
 const usage = { inputTokens: 300, outputTokens: 40 };
 const answer = (data: unknown): StructuredResult => ({ ok: true, data, usage });
@@ -37,6 +43,12 @@ describe("keywordFallback", () => {
 
   it("gives empty filters for empty input", () => {
     expect(keywordFallback("")).toEqual(Filters.parse({}));
+  });
+});
+
+describe("INTERPRET_SYSTEM_PROMPT", () => {
+  it("lists every region by the exact name region matching compares", () => {
+    for (const region of UK_REGIONS) expect(INTERPRET_SYSTEM_PROMPT).toContain(region);
   });
 });
 

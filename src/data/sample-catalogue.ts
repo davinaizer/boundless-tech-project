@@ -1,11 +1,12 @@
 import "server-only";
 import { z } from "zod";
 import { Offer } from "@/domain/offer";
+import generatedOffers from "./generated-offers.json";
 
 // Fictional sample data. Partners are invented and every price, saving and
 // expiry date is a labelled sample term, not a claim about a real offer
-// (ADR-004). Region values are a sample vocabulary; how a region filter matches
-// "UK-wide" is a SearchOffers contract decision, not made here.
+// (ADR-004). Regions are one of UK_REGIONS or UK_WIDE_REGION
+// (src/domain/search-offers.ts); matching is in docs/architecture.md.
 //
 // Deliberate edge cases for the contract tests: a free offer, a zero saving,
 // expired offers, Plus-only offers, multi-audience offers and similar offers
@@ -324,3 +325,12 @@ const offers: Offer[] = [
 
 // Validated at load, so a malformed entry fails on import rather than in search.
 export const SAMPLE_OFFERS: readonly Offer[] = z.array(Offer).parse(offers);
+
+// About 150 more fictional offers, generated once, offline, from a committed
+// spec and reviewed (ADR-013, docs/research/generated-catalogue-spec.md). Same
+// labelling as above: invented partners, sample terms. Never generated at runtime.
+export const GENERATED_OFFERS: readonly Offer[] = z.array(Offer).parse(generatedOffers);
+
+// What the app searches and the seed loads: the hand-written offers, then the
+// generated ones. Tests that pin exact results use SAMPLE_OFFERS.
+export const CATALOGUE_OFFERS: readonly Offer[] = [...SAMPLE_OFFERS, ...GENERATED_OFFERS];

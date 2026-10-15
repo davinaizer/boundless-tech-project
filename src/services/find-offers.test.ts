@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createInMemorySearchOffers } from "@/data/in-memory-search-offers";
+import { SAMPLE_OFFERS } from "@/data/sample-catalogue";
 import { Filters } from "@/domain/filters";
 import { estimateSavings } from "@/domain/savings";
 import { findOffers, ukDate } from "./find-offers";
@@ -19,9 +21,14 @@ describe("findOffers", () => {
     vi.useRealTimers();
   });
 
-  it("ranks the matching offers from the catalogue", async () => {
+  // The catalogue includes generated offers (ADR-013), so these assert the
+  // hand-written offers are found rather than pinning the whole result.
+  it("finds the matching offers from the catalogue", async () => {
     const found = await findOffers(Filters.parse({ categories: ["dining"] }), "2026-10-15");
-    expect(found.map((o) => o.id)).toEqual(["offer-005", "offer-006", "offer-007", "offer-008"]);
+    expect(found.every((o) => o.category === "dining")).toBe(true);
+    expect(found.map((o) => o.id)).toEqual(
+      expect.arrayContaining(["offer-005", "offer-006", "offer-007", "offer-008"]),
+    );
   });
 
   it("defaults today to the UK date", async () => {
@@ -31,15 +38,16 @@ describe("findOffers", () => {
 
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-08-31T22:30:00Z"));
-    expect(await ids()).toEqual(["offer-012"]);
+    expect(await ids()).toContain("offer-012");
 
     // 23:30 UTC on 31 August is already 1 September in London.
     vi.setSystemTime(new Date("2026-08-31T23:30:00Z"));
-    expect(await ids()).toEqual([]);
+    expect(await ids()).not.toContain("offer-012");
   });
 });
 
 // Phase 1 "done when": search and savings run end to end with no model call.
+// Runs on the hand-written offers only, so the hand-checked figures stay exact.
 describe("search then savings, no AI", () => {
   it("finds family days out under £30 a head and estimates the saving against each fee", async () => {
     const filters = Filters.parse({
@@ -47,7 +55,7 @@ describe("search then savings, no AI", () => {
       audience: "family",
       maxPricePerPerson: 30,
     });
-    const found = await findOffers(filters, "2026-10-15");
+    const found = await createInMemorySearchOffers(SAMPLE_OFFERS).search(filters, "2026-10-15");
     // offer-004 is neither for families nor still valid; the rest rank by annual saving.
     expect(found.map((o) => o.id)).toEqual(["offer-001", "offer-003", "offer-002"]);
 

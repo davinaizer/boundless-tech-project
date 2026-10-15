@@ -1,6 +1,7 @@
 import "server-only";
 import { FILTER_LIMITS, Filters } from "@/domain/filters";
 import { Audience, Category, Tier } from "@/domain/offer";
+import { UK_REGIONS } from "@/domain/search-offers";
 import { getAiClient, type AiClient, type ModelUsage } from "@/lib/ai";
 
 export type Interpretation = {
@@ -15,7 +16,7 @@ export type Interpretation = {
 export const INTERPRET_SYSTEM_PROMPT = `You turn a member's request for UK leisure offers into search filters.
 Fill a field only when the request states or clearly implies it; leave every other field out.
 - categories: any of ${Category.options.join(", ")}. Cinemas, gardens, attractions and days out are days-out; theatre, comedy and concerts are events; restaurants and cafes are dining; hotels and flights are travel; fuel, parking and car insurance are motoring.
-- region: a UK nation or region, such as London, South East, North West, Scotland or Wales. Map a town or city to its region (Manchester is North West).
+- region: exactly one of ${UK_REGIONS.join(", ")}. Map a town or city to its region (Manchester is North West).
 - maxPricePerPerson: a budget in pounds per person, as a number. "Under £20 each" is 20.
 - audience: solo, couple or family.
 - tier: standard or plus, only when the member says which membership they have.

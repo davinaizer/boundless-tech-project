@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import { z } from "zod";
 import { replaceOffers } from "@/data/postgres-search-offers";
-import { SAMPLE_OFFERS } from "@/data/sample-catalogue";
+import { CATALOGUE_OFFERS } from "@/data/sample-catalogue";
 
 // Loads the fictional sample catalogue into a migrated database, replacing what
 // is there. Run with `pnpm db:seed` (tsx with the react-server condition; see
@@ -17,8 +17,8 @@ async function main(): Promise<void> {
   }
   const pool = new Pool({ connectionString: parsed.data });
   try {
-    await replaceOffers(pool, SAMPLE_OFFERS);
-    console.log(`Seeded ${SAMPLE_OFFERS.length} sample offers.`);
+    await replaceOffers(pool, CATALOGUE_OFFERS);
+    console.log(`Seeded ${CATALOGUE_OFFERS.length} sample offers.`);
   } finally {
     await pool.end();
   }
