@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Filters } from "@/domain/filters";
+import type { Explanation } from "@/domain/match-reasons";
 import type { Offer } from "@/domain/offer";
 import type { SavingsEstimate } from "@/domain/savings";
 import {
@@ -18,6 +19,7 @@ import { filtersFromSearch, filtersToSearch } from "./filters-url";
 import { FeePanel } from "./FeePanel";
 import { createLatest } from "./latest";
 import { OfferCard } from "./OfferCard";
+import { Spinner } from "./Spinner";
 
 // Cards shown, and the offers explained: the explain endpoint takes at most ten.
 const MAX_SHOWN = 10;
@@ -32,7 +34,7 @@ type Ready = {
   offers: Offer[];
   savings: SavingsEstimate;
   // null while /api/explain is pending; {} when no lines could be had.
-  lines: Record<string, string> | null;
+  lines: Record<string, Explanation> | null;
   refreshing: boolean;
 };
 
@@ -70,6 +72,7 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
   const [query, setQuery] = useState("");
   const [hint, setHint] = useState<string | null>(null);
   const [state, setState] = useState<State>({ phase: "idle" });
+  const queryInput = useRef<HTMLInputElement>(null);
   const latest = useRef(createLatest());
   const lastAction = useRef<() => void>(() => {});
 
@@ -90,10 +93,10 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
     });
     const ids = found.offers.slice(0, MAX_SHOWN).map((offer) => offer.id);
     if (ids.length === 0) return;
-    let lines: Record<string, string> = {};
+    let lines: Record<string, Explanation> = {};
     try {
       const explained = await explainRequest(filters, ids, req.signal);
-      lines = Object.fromEntries(explained.explanations.map((e) => [e.offerId, e.text]));
+      lines = Object.fromEntries(explained.explanations.map((e) => [e.offerId, e]));
     } catch (error) {
       if (isAbort(error)) return;
       // Explanations are secondary: results stay, without their lines.
@@ -195,21 +198,39 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
             <label htmlFor="query" className="sr-only">
               What would you like to do?
             </label>
-            <input
-              id="query"
-              name="query"
-              value={query}
-              maxLength={maxQueryChars}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="A cheap family day out near Brighton, under £30 a head"
-              // muted, not periwinkle: the boundary of the input needs 3:1 (WCAG 1.4.11).
-              className="min-w-0 flex-1 basis-80 rounded-full border-2 border-muted bg-white px-[26px] py-[15px] text-slate outline-none placeholder:text-muted focus:border-blue focus:ring-2 focus:ring-blue"
-            />
+            <div className="relative min-w-0 flex-1 basis-80">
+              <input
+                id="query"
+                name="query"
+                ref={queryInput}
+                value={query}
+                maxLength={maxQueryChars}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="A cheap family day out near Brighton, under £30 a head"
+                // muted, not periwinkle: the boundary of the input needs 3:1 (WCAG 1.4.11).
+                // Right padding leaves room for the clear button.
+                className="w-full rounded-full border-2 border-muted bg-white py-[15px] pl-[26px] pr-14 text-slate outline-none placeholder:text-muted focus:border-blue focus:ring-2 focus:ring-blue"
+              />
+              {query !== "" && (
+                <button
+                  type="button"
+                  aria-label="Clear text"
+                  onClick={() => {
+                    setQuery("");
+                    queryInput.current?.focus();
+                  }}
+                  className="absolute right-4 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-xl leading-none text-blue"
+                >
+                  ×
+                </button>
+              )}
+            </div>
             <button
               type="submit"
               disabled={state.phase === "loading"}
-              className="rounded-full bg-red px-[34px] py-[15px] font-heading text-base font-bold text-white disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-full bg-red px-[34px] py-[15px] font-heading text-base font-bold text-white disabled:opacity-60"
             >
+              {state.phase === "loading" && <Spinner />}
               Find offers
             </button>
           </form>

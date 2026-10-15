@@ -98,6 +98,15 @@ components:
   offer-card-title:
     textColor: "{colors.blue}"
     typography: "{typography.title}"
+  offer-facts:
+    textColor: "{colors.muted}"
+    typography: "{typography.body-small}"
+  why-it-fits:
+    backgroundColor: "{colors.tint}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 12px 16px 16px
   saving-tag:
     backgroundColor: "{colors.tint}"
     textColor: "{colors.blue}"
@@ -159,10 +168,10 @@ Tone: plain, friendly, sentence case. Buttons say what happens ("Find offers"). 
 
 - **red (#E51F2D):** the single action colour. Used for the primary button and the yearly-saving badge only.
 - **blue (#2B5FA6):** headings, offer titles, figures, links, the tier strip of Standard offers and the Standard tile in the fee panel (white text on it is 6.4:1).
-- **slate (#36535F):** supporting text, the tier strip of Plus-only offers and the Plus tile in the fee panel.
+- **slate (#36535F):** supporting text, the partner name on offer cards, the tier strip of Plus-only offers and the Plus tile in the fee panel.
 - **ink (#1F3440):** the fee panel background only, a darker step of slate so the panel is not mistaken for the Plus colour. White text on it is about 12.9:1.
 - **body (#444444):** running text on white.
-- **muted (#4F6873):** secondary text such as partner names and hints.
+- **muted (#4F6873):** secondary text such as the facts row and hints.
 - **tint (#EFF4F6):** page background and chip and tag fills.
 - **line (#DFECEE):** hairline borders on cards.
 - **periwinkle (#CED7EC):** borders of chips and saving tags. Not the query box: periwinkle on white is 1.44:1, under the 3:1 that WCAG 1.4.11 asks of an input's boundary, so the query box uses muted (5.9:1).
@@ -197,7 +206,9 @@ Three radii only: 16px for tiles, 32px for the large fee panel, and full pills f
 - **button-primary:** red pill, white bold label.
 - **query-input:** white pill with a muted border (contrast, see Colors).
 - **filter-chip / filter-chip-add:** tinted pill with a bold blue field name and a remove mark. The add chip has a dashed blue border.
-- **offer-card:** white tile with the offer title in blue, partner in muted text, one line of why it matches, and a saving tag. A tier strip closes the tile and shows tier eligibility and validity: blue for Standard offers, slate for Plus-only offers.
+- **offer-card:** white tile with the offer title in blue, the partner in bold slate, a facts row, the why-it-fits block, and a saving tag. A tier strip closes the tile and shows tier eligibility and validity: blue for Standard offers, slate for Plus-only offers.
+- **offer-facts:** one row under the partner name with three facts, each with a 16px outline icon in blue and its text in muted: place (pin; the offer's region, "UK-wide" included), typical price a head ("Free" when it is nil), and who it suits ("Anyone" when all three audiences). These are catalogue fields, never model output. The icons are decorative; each fact carries a screen-reader-only prefix ("Where:", "Price:", "Suits:"). Items are separated by spacing, not dots. The row and the saving tag wrap: on a narrow screen the tag sits under the facts instead of squeezing the title.
+- **why-it-fits:** a tinted block inset in the offer card between the header and the tier strip, so the line that explains the match reads as its own element. A label "Why it fits" (label type, blue) sits above the line (body, ink; 11.7:1 on tint). The caption says where the line came from: a model line has a blue spark mark and "Written by AI"; a deterministic `describeMatch` line has no mark and says "Matched on your filters". The spark is used only here and is never shown on a deterministic line. While `/api/explain` is pending the block is already there, with a spinner and "Working out why it fits…", so the card does not change height; the line then fades in once (150 ms, not under reduced motion). The caption is `muted` on `tint` (5.3:1) and the label `blue` on `tint` (5.8:1), computed from the hex values.
 - **saving-tag:** the per-use saving as tint pill with a blue figure.
 - **fee-panel:** ink card with the illustrative yearly arithmetic for the best three matches (stated, with how many other matches are not counted), then one plain sentence per tier in its own tile, blue for Standard and slate for Plus like the offer cards' tier strips (a thin white border keeps the tiles defined on the darker ink panel): its fee, what the counted offers could save and the difference. Standard is always shown; Plus only when a counted offer needs it. The text on the 2026-10 mockup ("Offers you can use", margin pill, all matches) is superseded.
 - **savings-badge:** red circle overlapping the panel's top right corner, showing "About £X a year": the total of the counted offers, in whole pounds.
@@ -211,6 +222,7 @@ The mockup is `docs/design/benefits-finder-mockup-boundless.png`. The first, neu
 - Do keep red for the primary action and the yearly-saving badge.
 - Do show filter changes immediately, without a page reload.
 - Don't use the Boundless logo, wordmark, illustrations or fonts.
+- Don't mark a deterministic line as AI-written: the spark and "Written by AI" belong to a model line only, per line.
 - Don't state a saving the deterministic estimate did not produce. Model output never supplies prices or savings.
 - Don't add a fourth radius or a second action colour.
 - Don't rely on colour alone: tier eligibility is always written in the tier strip.

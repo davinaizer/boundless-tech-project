@@ -80,10 +80,12 @@ export async function explainResults(
 
   const fallbackLines = new Map(offers.map((offer) => [offer.id, describeMatch(offer, filters)]));
   const withFallback = (lines: Map<string, string>): Explanation[] =>
-    offers.map((offer) => ({
-      offerId: offer.id,
-      text: lines.get(offer.id) ?? fallbackLines.get(offer.id)!,
-    }));
+    offers.map((offer) => {
+      const modelLine = lines.get(offer.id);
+      return modelLine === undefined
+        ? { offerId: offer.id, text: fallbackLines.get(offer.id)!, source: "fallback" }
+        : { offerId: offer.id, text: modelLine, source: "llm" };
+    });
 
   const prompt = JSON.stringify({
     filters,

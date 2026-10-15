@@ -189,17 +189,22 @@ describe("POST /api/explain", () => {
     });
     const response = await explain(post({ filters, offerIds: ["offer-001", "offer-002"] }));
     expect(response.status).toBe(200);
-    const body = (await response.json()) as { explanations: { offerId: string; text: string }[] };
+    const body = (await response.json()) as {
+      explanations: { offerId: string; text: string; source: string }[];
+    };
     expect(body.explanations.map((e) => e.offerId)).toEqual(["offer-001", "offer-002"]);
     expect(body.explanations[0]!.text).toBe("A table that fits.");
+    // One response can hold both: the model's line and the offer it left out.
+    expect(body.explanations.map((e) => e.source)).toEqual(["llm", "fallback"]);
     expect(ai.calls).toHaveLength(1);
   });
 
   it("answers 200 with deterministic lines when the model fails", async () => {
     const response = await explain(post({ filters, offerIds: ["offer-001"] }));
     expect(response.status).toBe(200);
-    const body = (await response.json()) as { explanations: unknown[] };
+    const body = (await response.json()) as { explanations: { source: string }[] };
     expect(body.explanations).toHaveLength(1);
+    expect(body.explanations[0]!.source).toBe("fallback");
   });
 
   it("returns an empty list for no IDs or unknown IDs, with no model call", async () => {

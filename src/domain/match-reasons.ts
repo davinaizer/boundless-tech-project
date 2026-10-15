@@ -58,7 +58,16 @@ const ModelExplanations = z.strictObject({
   explanations: z.array(z.strictObject({ offerId: z.string(), text: z.string() })),
 });
 
-export type Explanation = { offerId: string; text: string };
+// Where a shown line came from: the model's grounded line, or describeMatch. The
+// UI says so per line, because one response can hold both (an offer the model
+// left out gets its describeMatch line).
+export const LineSource = z.enum(["llm", "fallback"]);
+export type LineSource = z.infer<typeof LineSource>;
+
+// A model line that passed the grounding check; it has no source yet.
+export type GroundedLine = { offerId: string; text: string };
+
+export type Explanation = GroundedLine & { source: LineSource };
 
 // The grounding check on a model answer. The whole answer is rejected, not
 // trimmed, when any entry fails (ADR-002): an ID outside the offers that were
@@ -70,12 +79,12 @@ export type Explanation = { offerId: string; text: string };
 export function groundExplanations(
   raw: unknown,
   sentIds: readonly string[],
-): { ok: true; explanations: Explanation[] } | { ok: false } {
+): { ok: true; explanations: GroundedLine[] } | { ok: false } {
   const parsed = ModelExplanations.safeParse(raw);
   if (!parsed.success) return { ok: false };
   const allowed = new Set(sentIds);
   const seen = new Set<string>();
-  const explanations: Explanation[] = [];
+  const explanations: GroundedLine[] = [];
   for (const { offerId, text } of parsed.data.explanations) {
     const trimmed = text.trim();
     if (!allowed.has(offerId) || seen.has(offerId)) return { ok: false };

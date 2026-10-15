@@ -18,6 +18,17 @@
   /* Three radii only: tiles, the large fee panel, and full pills. */
   --radius-tile: 16px;
   --radius-panel: 32px;
+
+  /* One short reveal when a line arrives; skipped under reduced motion. */
+  --animate-fade-in: fade-in 150ms ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 body {
@@ -33,6 +44,13 @@ h2,
 h3 {
   font-family: var(--font-heading);
   letter-spacing: -0.015em;
+}
+
+/* Tailwind v4 no longer sets a pointer cursor on buttons, so they show the
+   browser default. Enabled buttons get the pointer; disabled and aria-disabled
+   ones (used while results refresh) do not. */
+button:not(:disabled):not([aria-disabled="true"]) {
+  cursor: pointer;
 }
 
 /* A visible keyboard focus indicator on everything that takes focus (WCAG 2.4.7);
