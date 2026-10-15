@@ -41,7 +41,7 @@ Delegation level follows consequence, reversibility and how well the result can 
 
 Accepted work needs: scope and acceptance criteria, verification proportionate to the change, review of assumptions and the meaningful diff, and any unresolved risk stated. Passing checks does not replace review.
 
-Workflow per task: **plan → implement → review → complete**, using the skills in `.agents/skills/` (`plan-next-task`, `implement-task`, `review-task`, `complete-task`). They are adapted from an earlier project and trimmed to this repository's documents. Claude Code finds them through the `.claude/skills` symlink. Each stage hands off to the next and stops for developer approval where the skill says so.
+Workflow per task: **plan → implement → review → complete**, using the skills in `.agents/skills/` (`plan-next-task`, `implement-task`, `review-task`, `complete-task`; `review-phase` per phase). They are adapted from an earlier project and trimmed to this repository's documents. Claude Code finds them through the `.claude/skills` symlink. Each stage hands off to the next and stops for developer approval where the skill says so. At the end of each code phase (1 to 4), `review-phase` checks for architecture drift across tasks; run it in a fresh session before planning the next phase.
 
 ## Conventions
 

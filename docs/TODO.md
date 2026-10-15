@@ -1,6 +1,6 @@
 # Work plan
 
-Phases are small and reversible. Each ends with a review gate before the next starts. Budget: the original plan was 8 hours including setup and documentation; it is now about 10h30 (see the time log and [ADR-010](adr/010-postgres-data-layer.md), [ADR-011](adr/011-local-first-delivery.md)). Record actual time in the table at the end.
+Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint (`review-phase`, run in a fresh session) before the next phase is planned; it checks for architecture drift across tasks. Budget: the original plan was 8 hours including setup and documentation; it is now about 11h10 (see the time log and [ADR-010](adr/010-postgres-data-layer.md), [ADR-011](adr/011-local-first-delivery.md)). Record actual time in the table at the end.
 
 ## Phase 0: Setup and governance (1h20)
 
@@ -16,7 +16,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 **Done when:** CI is green on an empty app and `pnpm db:up` starts a local database.
 
-## Phase 1: Domain, data and search (3h30)
+## Phase 1: Domain, data and search (3h40)
 
 - [x] `src/lib/env.ts`: Zod-parsed environment, the only reader of `process.env` ([ADR-009](adr/009-nextjs-conventions.md)). Server-only; `parseEnv` is unit-tested; holds `NEXT_PUBLIC_APP_VERSION` and optional `DATABASE_URL`. Each later feature adds its own variable (model provider and key in Phase 2). `scripts/` is outside `src/` and does not import this module
 - [x] Types and Zod schemas: `Offer`, `Filters`, `Category` (`src/domain/offer.ts`, `filters.ts`; strict objects, limits are heuristics in `FILTER_LIMITS`; behaviour decisions stay with the contract item)
@@ -31,10 +31,11 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] Adapter chosen by `DATABASE_URL` (Postgres when set, in-memory otherwise)
 - [ ] `estimateSavings` and fee constants
 - [ ] Unit tests for schema, search and savings
+- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** tests pass on both adapters, in CI and locally, and search and savings run with no AI. If this is not met in time, unset `DATABASE_URL` and continue on the in-memory adapter.
 
-## Phase 2: AI layer (2h15)
+## Phase 2: AI layer (2h25)
 
 - [ ] `lib/ai` client for Claude Haiku 5.5 with structured output; mock provider
 - [ ] `PROMPT_VERSION` constant, recorded in eval output
@@ -43,10 +44,11 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] `explainResults` with grounding check
 - [ ] Eval set of about 15 queries and an on-demand script
 - [ ] Service tests with the mocked client, including a timeout
+- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** service tests pass and the eval has been run once and its result recorded.
 
-## Phase 3: API and UI (1h55)
+## Phase 3: API and UI (2h05)
 
 - [ ] Route Handlers: interpret, search, explain
 - [ ] UI: query box, editable chips, results, savings, loading, empty and error states
@@ -57,12 +59,14 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] Input cap, and a content-type and body-size check before parsing (the rate limit moves to the optional deploy phase)
 - [ ] One error shape from all endpoints, `{ error: { code, message, requestId } }`, with codes defined in `src/domain` and mapped to UI error states; no internals in messages ([architecture](architecture.md))
 - [ ] One structured JSON log line per request (no query text); version shown in the UI footer
+- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** a query works end to end locally with the real model and with the mock.
 
-## Phase 4: e2e (0.5h)
+## Phase 4: e2e (0h40)
 
 - [ ] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path
+- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
 
@@ -106,11 +110,11 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | Phase | Planned | Actual |
 |---|---|---|
 | 0 | 1h20 | about 46 min (recorded by the author) |
-| 1 | 3h30 | |
-| 2 | 2h15 | |
-| 3 | 1h55 | |
-| 4 | 0.5h | |
+| 1 | 3h40 | |
+| 2 | 2h25 | |
+| 3 | 2h05 | |
+| 4 | 0h40 | |
 | 5 | 1h | |
 | 6 (optional) | 0.75h | |
 
-Planned total, phases 0 to 5, is about 10h30. The first plan was 8h. The roadmap additions added about 45 minutes, ADR-010 and ADR-011 added about 1h20 net (the Postgres adapter and container about 2h, less the Netlify spike and the rate limit moved to Phase 6), and the model timeout and error shape added about 25 minutes. All figures are estimates, not measurements. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).
+Planned total, phases 0 to 5, is about 11h10. The first plan was 8h. The roadmap additions added about 45 minutes, ADR-010 and ADR-011 added about 1h20 net (the Postgres adapter and container about 2h, less the Netlify spike and the rate limit moved to Phase 6), the model timeout and error shape added about 25 minutes, and the phase checkpoints for phases 1 to 4 added about 40 minutes. All figures are estimates, not measurements. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).
