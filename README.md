@@ -51,6 +51,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 **Two minutes**
 - [Idea and scope: ADR-001](docs/adr/001-problem-and-idea.md)
 - [Architecture and diagrams](docs/architecture.md): user flow, system design, request flow
+- [Roadmap](docs/roadmap.md): what is built, optional, or left out (observability, health, versioning, OpenAPI, analytics, scalability), with trade-offs
 - [Design theme](DESIGN.md) and [mockups](docs/design/): visual direction, styled after the public look of boundless.co.uk (concept only)
 
 **Ten minutes**
@@ -100,7 +101,9 @@ Current, from the ADRs:
 - **Best-effort rate limiting.** In-memory limits do not hold across serverless instances. The provider spend limit is the real control.
 - **Only some filters are evidenced in the production index.** Category, expiry and probably membership level were observed. Region, price and audience exist only in the sample data.
 
-*Pending: improvements with more time, and what would be done differently inside the company, are finalised after the build.*
+Operational scope (observability, health check, versioning, OpenAPI, analytics) and scalability hypotheses are in the [roadmap](docs/roadmap.md).
+
+*Pending: what would be done differently inside the company is finalised after the build.*
 
 ## Repository layout
 
@@ -112,6 +115,7 @@ docs/
   adr/             decision records
   research/        evidence behind the decisions
   architecture.md  design and diagrams
+  roadmap.md       scope tiers, trade-offs, scalability
   design/          UI mockups
   TODO.md          plan, acceptance criteria, time log
 .agents/skills/    task workflow skills (.claude/skills links here)

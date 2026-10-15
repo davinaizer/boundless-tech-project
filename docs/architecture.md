@@ -148,8 +148,11 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 | `POST /api/interpret` | `{ query }` | `{ filters, source: "llm" or "fallback" }` | Yes (1) |
 | `POST /api/search` | `{ filters }` | `{ offers, savings }` | No |
 | `POST /api/explain` | `{ filters, offerIds }` | `{ explanations: [{ offerId, text }] }` | Yes (1) |
+| `GET /api/health` | none | `{ status: "ok", version }` | No |
 
 `/api/explain` takes offer IDs, not offer data. The server reloads the offers from the port, so the client cannot inject content into the prompt.
+
+**Operations.** Each request writes one JSON log line: request ID, endpoint, latency, model calls, token counts, fallback used, outcome, and `PROMPT_VERSION`. Query text is never logged. The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`. Scope tiers and trade-offs: [roadmap](roadmap.md).
 
 **Savings estimate.** Each offer has `typicalSavingPerUse` and `assumedUsesPerYear` (illustrative sample values). The estimate sums them over the shortlist and compares the total with the tier fee (£45 or £78, from the public site as of 2026-10-14). Always labelled illustrative.
 
@@ -166,6 +169,8 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 | Abuse or loops | Input cap, rate limit, provider spend limit ([ADR-006](adr/006-demo-protection.md)) |
 
 ## Production path (not built)
+
+Scope tiers, trade-offs and scalability hypotheses are in the [roadmap](roadmap.md). The list below is the data and AI path.
 
 - Replace the in-memory adapter with a search-service-backed adapter ([ADR-004](adr/004-data-layer.md)). The adapter translates typed filters into the service's filter syntax; the model never writes filter strings.
 - Fields beyond category, expiry and tier would need index enrichment (for example tagging records at index time) or be handled as free-text query.

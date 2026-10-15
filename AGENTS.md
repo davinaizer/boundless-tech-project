@@ -13,6 +13,7 @@ A small full-stack AI app (a natural-language benefits finder) built as a techni
 | Overview, setup, how AI is used, trade-offs | `README.md` |
 | System design, diagrams, contracts | [docs/architecture.md](docs/architecture.md) |
 | Why a decision was made | [docs/adr/](docs/adr/README.md) |
+| Scope tiers, below-the-line items, scalability | [docs/roadmap.md](docs/roadmap.md) |
 | Visual theme and mockups | [DESIGN.md](DESIGN.md), [docs/design/](docs/design/) |
 | Evidence behind decisions | [docs/research/](docs/research/) |
 | Work plan, phases, acceptance criteria | [docs/TODO.md](docs/TODO.md) |
