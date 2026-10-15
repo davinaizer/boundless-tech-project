@@ -99,7 +99,7 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 
 | Phase | Planned | Actual |
 |---|---|---|
-| 0 | 1h20 | |
+| 0 | 1h20 | about 46 min (recorded by the author) |
 | 1 | 3h30 | |
 | 2 | 2h15 | |
 | 3 | 1h55 | |
