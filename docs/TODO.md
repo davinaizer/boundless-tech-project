@@ -10,8 +10,8 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [x] GitHub Actions: `pnpm check` and `pnpm build` on push and pull request (first run green, about 28s, reported by the author; e2e job added with the Playwright item)
 - [x] `compose.yaml` for local Postgres with a fully qualified image; `pnpm db:up` and `db:down`; `.env.example` with dev-only values. Checked 2026-10-15 ([ADR-011](adr/011-local-first-delivery.md)): `podman compose` 6.1.3 delegates to the `docker-compose` 5.6.0 provider and works; Postgres 18 (`18.6`), the latest major on Docker Hub, chosen because no hosted option is selected yet. The Podman machine must be running (`podman machine start`)
 - [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
-- [x] `GET /api/health` returning status and version (request-time via `connection()`; `version` is the package version only until the version string item, which edits `src/lib/version.ts`)
-- [ ] App version string `v<package>+<build>.<short sha>` computed at build time; build number from the git commit count, falling back to `dev`
+- [x] `GET /api/health` returning status and version (request-time via `connection()`)
+- [x] App version string `v<package>+<build>.<short sha>` computed at build time in `next.config.ts`; build number from the git commit count, `v<package>+dev` when git is unavailable. CI checks out full history (`fetch-depth: 0`). `src/lib/env.ts` now exists with this one variable and Zod; Phase 1 extends it
 - [ ] `.gitignore` cleaned for this stack
 - [ ] Oxlint `no-restricted-imports` boundaries (confirm per-folder overrides and a `process.env` restriction work, [ADR-012](adr/012-oxc-lint-and-format.md)) and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
 

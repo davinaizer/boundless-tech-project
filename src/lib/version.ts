@@ -1,5 +1,4 @@
-import { version } from "../../package.json";
+import { env } from "@/lib/env";
 
-// The package version only, for now. The build number and short commit SHA are
-// added here by the app version string task (docs/TODO.md).
-export const APP_VERSION: string = version;
+// `v<package>+<build>.<short sha>`, computed at build time in next.config.ts.
+export const APP_VERSION: string = env.NEXT_PUBLIC_APP_VERSION;
