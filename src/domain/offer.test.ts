@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Category, Offer } from "./offer";
+import { Category, Offer, tierCanUse } from "./offer";
 
 const valid = {
   id: "offer-001",
@@ -70,5 +70,14 @@ describe("Offer", () => {
   it("requires whole, non-negative assumed uses per year", () => {
     expect(Offer.safeParse({ ...valid, assumedUsesPerYear: 1.5 }).success).toBe(false);
     expect(Offer.safeParse({ ...valid, assumedUsesPerYear: -1 }).success).toBe(false);
+  });
+});
+
+describe("tierCanUse", () => {
+  it("lets Standard members use Standard offers only, and Plus members use all", () => {
+    expect(tierCanUse("standard", "standard")).toBe(true);
+    expect(tierCanUse("standard", "plus")).toBe(false);
+    expect(tierCanUse("plus", "standard")).toBe(true);
+    expect(tierCanUse("plus", "plus")).toBe(true);
   });
 });

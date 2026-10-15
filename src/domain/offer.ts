@@ -8,6 +8,12 @@ export type Category = z.infer<typeof Category>;
 export const Tier = z.enum(["standard", "plus"]);
 export type Tier = z.infer<typeof Tier>;
 
+// The tier rule (docs/architecture.md): Standard members use Standard offers,
+// Plus members use all. The Postgres adapter restates it in SQL; the contract
+// suite keeps the two adapters in step.
+export const tierCanUse = (memberTier: Tier, offerTier: Tier) =>
+  memberTier === "plus" || offerTier === "standard";
+
 export const Audience = z.enum(["solo", "couple", "family"]);
 export type Audience = z.infer<typeof Audience>;
 

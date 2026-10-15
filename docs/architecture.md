@@ -106,16 +106,16 @@ sequenceDiagram
 |---|---|---|
 | UI (`src/app`) | Input, chips, results, savings, loading, empty and error states | API contracts only |
 | Route Handlers (`src/app/api`) | Validate input, orchestrate, shape responses | services |
-| Services (`src/services`) | `interpretQuery`, `explainResults`, `findOffers` (calls the `SearchOffers` port) | domain, `lib/ai` |
+| Services (`src/services`) | `interpretQuery`, `explainResults`, `findOffers` (calls the `SearchOffers` port) | domain, `lib/ai`, and `data` only for the adapter-selection entry point (`@/data`) |
 | Domain (`src/domain`) | Types, Zod schemas, the `SearchOffers` port (an interface only), `estimateSavings`, grounding check. Pure | nothing |
 | AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK |
-| Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain |
+| Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain, `lib/env` (adapter selection reads `DATABASE_URL`) |
 
 Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by Oxlint.
 
 ## Folder structure
 
-Target layout. Folders are created when they get content ([ADR-009](adr/009-nextjs-conventions.md) rule 2), so most of this does not exist yet. Parts marked *proposal* go beyond ADR-009 and are confirmed in the Phase 0 and Phase 1 plans.
+Target layout. Folders are created when they get content ([ADR-009](adr/009-nextjs-conventions.md) rule 2), so most of this does not exist yet. Parts marked *proposal* go beyond ADR-009 and are confirmed in the plan of the phase that builds them.
 
 ```text
 boundless-tech-test/
@@ -152,12 +152,12 @@ boundless-tech-test/
 
 Conventions inside `src/`, from ADR-009: components are `PascalCase.tsx`, all other files `kebab-case.ts`, and the import boundaries are enforced by Oxlint.
 
-Proposals:
-- Unit tests sit beside the code as `*.test.ts`. Integration tests sit beside it as `*.integration.test.ts` and run with `pnpm test:integration`, against their own database: the `postgres-test` Compose service (port 5433, in-memory storage), so they never touch the dev data that `pnpm db:seed` loads. The Vitest global setup migrates it first; `TEST_DATABASE_URL` overrides its URL (for CI). The contract test suite for the port lives with the port in `src/domain` and is imported by each adapter's integration test.
-- `src/data` holds the sample catalogue module, one file per adapter, and a single `index.ts` that returns the adapter for the current environment: Postgres when `DATABASE_URL` is set, in-memory otherwise. It is built on first use and reused, so a server process holds one connection pool (with an `error` listener, so a failed idle connection cannot crash the process). Nothing else chooses an adapter. Unit tests blank `DATABASE_URL`, so they always use the in-memory adapter.
+Proposals (for later phases):
 - The Tailwind theme mirrors the tokens in [DESIGN.md](../DESIGN.md).
 
 Decided in Phase 1:
+- Unit tests sit beside the code as `*.test.ts`. Integration tests sit beside it as `*.integration.test.ts` and run with `pnpm test:integration`, against their own database: the `postgres-test` Compose service (port 5433, in-memory storage), so they never touch the dev data that `pnpm db:seed` loads. The Vitest global setup migrates it first; `TEST_DATABASE_URL` overrides its URL (for CI). The contract test suite for the port lives with the port in `src/domain` and is imported by each adapter's integration test.
+- `src/data` holds the sample catalogue module, one file per adapter, and a single `index.ts` that returns the adapter for the current environment: Postgres when `DATABASE_URL` is set, in-memory otherwise. It is built on first use and reused, so a server process holds one connection pool (with an `error` listener, so a failed idle connection cannot crash the process). Nothing else chooses an adapter. Unit tests blank `DATABASE_URL`, so they always use the in-memory adapter.
 - `scripts/` run outside Next.js with `tsx --conditions=react-server`, set in their `pnpm` scripts. `tsx` resolves the `@/` paths from `tsconfig.json`, and the `react-server` condition makes `server-only` resolve to its empty module, which is the mechanism that package provides. So the seed script imports the sample catalogue from `src/data` unchanged, and ADR-009 rule 5 holds. Rejected: removing `server-only` from the catalogue (breaks rule 5), a custom loader alias like the Vitest stub (more code for the same result), and running the seed through Vitest (misuses the test runner). The condition applies to the whole script process, so any package with a `react-server` export would load its server build; scripts import no React, so this is accepted. Scripts are developer-run code, and bypassing the guard there is deliberate. Scripts do not import `src/lib/env.ts` (it requires the build-time version); each parses its own `DATABASE_URL` with Zod. `tsx` is a pinned dev dependency; its `esbuild` build script is not allowed (`allowBuilds` in `pnpm-workspace.yaml`), as the platform binary ships as an optional dependency. The seed script imports `@/data/sample-catalogue` and `@/data/postgres-search-offers` directly, not `@/data`, so it never depends on adapter selection.
 - Migrations are plain SQL files in `db/migrations/`, applied by `node-pg-migrate` (`pnpm db:migrate`, its own CLI, which reads `DATABASE_URL` from the shell). The driver is `pg` (node-postgres). Chosen in the Phase 1 Postgres plan (2026-10-15): node-pg-migrate reads SQL from a configurable directory and tracks applied migrations with a lock. Rejected: `postgres` (postgres.js), whose migration tool wants a folder per migration; `dbmate`, a downloaded binary; a hand-written runner, which would own tracking and locking; and `@neondatabase/serverless`, which speaks HTTP and needs a proxy for local Postgres. `@netlify/database` depends on `pg`, which suggests `pg` fits the hosted option; not verified until the optional deploy.
 
@@ -199,7 +199,7 @@ Behaviour every adapter must share, written as one contract test suite (`src/dom
 | `maxPricePerPerson` | Inclusive: `typicalPricePerPerson <= max`. Price is required, so a free offer has price `0` and passes every limit |
 | `keywords` | Any-of; case-insensitive substring over `title` and `partner` only, each field searched on its own (no match across the two). `Filters` removes repeated keywords, so each distinct keyword counts once toward ranking |
 | Expiry | Offers with `expiryDate < today` are hidden; an offer is valid through its expiry date. There is no option to include expired offers |
-| Clock | `today` is an argument, so adapters read no clock and tests need no fake timers |
+| Clock | `today` is an argument, so adapters read no clock and tests need no fake timers. `findOffers` supplies the Europe/London calendar date, when a UK expiry date rolls over |
 | Ranking | Keywords matched (more first), then estimated annual saving `typicalSavingPerUse × assumedUsesPerYear` (higher first), then `id` ascending. Annual saving is compared in whole pence so adapters cannot disagree on float ties |
 | `getByIds` | Known offers, each once, ordered by `id` ascending; unknown IDs omitted; expired offers still returned (a lookup, not a search) |
 
@@ -213,7 +213,7 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 |---|---|---|
 | `id`, `title`, `partner` | Identity and display | Not applicable (sample) |
 | `category` | Category filter | Observed |
-| `expiryDate` (optional) | Expired offers hidden by default | Observed |
+| `expiryDate` (optional) | Expired offers hidden from search | Observed |
 | `tier` | Standard or Plus availability | Probable (cards adapt to membership level) |
 | `region`, `audience`, `typicalPricePerPerson` | Region, audience and budget filters. `audience` is a non-empty list (an offer can suit several audiences); money is in pounds with at most two decimals | Not observed; sample only |
 | `typicalSavingPerUse`, `assumedUsesPerYear` | Illustrative savings estimate | Not applicable (illustrative) |
@@ -235,7 +235,7 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 
 **Errors and request checks.** Route Handlers reject a wrong content type or an oversized body before parsing (the limit is set in config, a heuristic), then validate with Zod. Every endpoint returns the same error shape for invalid requests and unexpected server errors: `{ error: { code, message, requestId } }` with an HTTP status. Messages are safe to show and carry no internals; `code` comes from a small closed set defined in `src/domain`, finalised in Phase 3. A model failure is not an error response: it triggers the fallback described below, and `/api/interpret` reports `source: "fallback"`.
 
-**Savings estimate.** Each offer has `typicalSavingPerUse` and `assumedUsesPerYear` (illustrative sample values). `estimateSavings` in `src/domain/savings.ts` gives each offer's yearly saving (per-use saving × uses), then, for each tier, the total of the offers that tier can use (Standard counts Standard offers, Plus counts all, as in the port's tier rule) and its margin against the tier fee (`MEMBERSHIP_FEES_PENCE`: £45 or £78, from the public site as of 2026-10-14). A negative margin means the offers do not cover the fee. It also returns the highest tier total for the "up to" badge. All amounts are whole pence, so sums are exact; the UI formats pounds. The result has a Zod schema, `SavingsEstimate`, for the `/api/search` response. Always labelled illustrative.
+**Savings estimate.** Each offer has `typicalSavingPerUse` and `assumedUsesPerYear` (illustrative sample values). `estimateSavings` in `src/domain/savings.ts` gives each offer's yearly saving (per-use saving × uses), then, for each tier, the total of the offers that tier can use (Standard counts Standard offers, Plus counts all: the port's tier rule, one predicate `tierCanUse` in `src/domain/offer.ts` shared with the in-memory adapter) and its margin against the tier fee (`MEMBERSHIP_FEES_PENCE`: £45 or £78, from the public site as of 2026-10-14). A negative margin means the offers do not cover the fee. It also returns the highest tier total for the "up to" badge. All amounts are whole pence, so sums are exact; the UI formats pounds. The result has a Zod schema, `SavingsEstimate`, for the `/api/search` response. Always labelled illustrative.
 
 ## Failure modes
 

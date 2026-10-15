@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Tier, type Offer } from "./offer";
+import { Tier, tierCanUse, type Offer } from "./offer";
 
 // Annual membership fees in whole pence, from boundless.co.uk as of 2026-10-14
 // (docs/research/boundless-company-profile.md). A snapshot, shown as illustrative.
@@ -36,8 +36,6 @@ export const SavingsEstimate = z.strictObject({
 });
 export type SavingsEstimate = z.infer<typeof SavingsEstimate>;
 
-const canUse = (tier: Tier, offer: Offer) => tier === "plus" || offer.tier === "standard";
-
 // Pure arithmetic over catalogue fields; the model never supplies these figures
 // (ADR-002). Sums what it is given: search results never repeat an offer.
 export function estimateSavings(offers: readonly Offer[]): SavingsEstimate {
@@ -57,7 +55,7 @@ export function estimateSavings(offers: readonly Offer[]): SavingsEstimate {
   const tiers = Tier.options.map((tier) => {
     const feePence = MEMBERSHIP_FEES_PENCE[tier];
     const usableSavingPence = lines
-      .filter(({ offer }) => canUse(tier, offer))
+      .filter(({ offer }) => tierCanUse(tier, offer.tier))
       .reduce((sum, { line }) => sum + line.annualSavingPence, 0);
     return { tier, feePence, usableSavingPence, marginPence: usableSavingPence - feePence };
   });

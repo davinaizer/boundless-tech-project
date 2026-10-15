@@ -120,7 +120,7 @@ docs/
   architecture.md, roadmap.md, TODO.md
 src/
   app/                 pages and Route Handlers (health endpoint exists)
-  domain/              types, Zod schemas, SearchOffers port
+  domain/              types, Zod schemas, SearchOffers port, estimateSavings
   lib/                 env.ts, version.ts; ai/ and log.ts planned
   data/                sample catalogue, in-memory and Postgres adapters
   services/            findOffers; interpretQuery and explainResults planned

@@ -41,6 +41,14 @@
             "patterns": [
               {
                 "group": [
+                  "@/app",
+                  "@/services",
+                  "@/data",
+                  "@/lib",
+                  "**/app",
+                  "**/services",
+                  "**/data",
+                  "**/lib",
                   "@/app/**",
                   "@/services/**",
                   "@/data/**",

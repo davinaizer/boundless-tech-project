@@ -1,6 +1,6 @@
 import "server-only";
 import type { Filters } from "@/domain/filters";
-import type { Offer } from "@/domain/offer";
+import { tierCanUse, type Offer } from "@/domain/offer";
 import { UK_WIDE_REGION, type SearchOffers } from "@/domain/search-offers";
 
 // Rules are the behaviour table in docs/architecture.md, proved by the contract suite.
@@ -24,8 +24,7 @@ const keywordMatches = (offer: Offer, keywords: readonly string[]) => {
 const matches = (offer: Offer, filters: Filters, today: string) => {
   if (offer.expiryDate !== undefined && offer.expiryDate < today) return false;
   if (filters.categories.length > 0 && !filters.categories.includes(offer.category)) return false;
-  // `plus` members can use Standard offers too, so only `standard` narrows.
-  if (filters.tier === "standard" && offer.tier !== "standard") return false;
+  if (filters.tier !== undefined && !tierCanUse(filters.tier, offer.tier)) return false;
   if (filters.audience !== undefined && !offer.audience.includes(filters.audience)) return false;
   if (
     filters.region !== undefined &&
