@@ -23,4 +23,4 @@ The approved plan is the contract. Stop and ask if it is missing, unapproved, or
 
 ## Output
 
-Short handoff: what changed, validation result, blockers or open decisions (omit if none), and "ready for review-task".
+Short handoff: what changed, validation result, blockers or open decisions (omit if none), and "ready for review-task". End by suggesting the developer run `review-task`; if a blocker or open decision remains, say it must be resolved first. Do not start the review.

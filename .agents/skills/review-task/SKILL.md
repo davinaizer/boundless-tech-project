@@ -26,3 +26,4 @@ Judge the work against the approved plan first, then against `docs/architecture.
 3. Criteria: pass/fail with evidence, one line each
 4. Verification run
 5. Verdict: exactly `PASS` or `CHANGES REQUIRED` (next stage: `implement-task`). Only `PASS` proceeds to `complete-task`.
+6. **Next step**: end by suggesting the next skill. `PASS` → `complete-task`. `CHANGES REQUIRED` → `implement-task` to fix the blocking defects, then `review-task` again. Do not start it.

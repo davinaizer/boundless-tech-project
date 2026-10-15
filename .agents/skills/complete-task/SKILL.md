@@ -20,4 +20,4 @@ description: Close one task after review-task returns a current PASS and the dev
 
 ## Output
 
-Validation result, docs updated, non-blocking limitations (omit if none), next TODO item (name only), commit message and files.
+Validation result, docs updated, non-blocking limitations (omit if none), next TODO item (name only), commit message and files. End by suggesting the developer run `plan-next-task` for that item. Do not plan it here.

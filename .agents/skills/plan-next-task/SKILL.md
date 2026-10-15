@@ -29,3 +29,4 @@ Authority order: brief → `docs/architecture.md` → accepted ADRs → `AGENTS.
 3. **Risks or decisions needed** (omit if none)
 4. **Criteria**, each with its evidence
 5. **Sequence** and **validation**
+6. **Next step**: end by suggesting the developer approve the plan and run `implement-task`. Do not start it.
