@@ -13,7 +13,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [x] `GET /api/health` returning status and version (request-time via `connection()`)
 - [x] App version string `v<package>+<build>.<short sha>` computed at build time in `next.config.ts`; build number from the git commit count, `v<package>+dev` when git is unavailable. CI checks out full history (`fetch-depth: 0`). `src/lib/env.ts` now exists with this one variable and Zod; Phase 1 extends it
 - [x] `.gitignore` cleaned for this stack (earlier-project leftovers removed; Playwright output paths are its documented defaults, confirmed when the Playwright item runs)
-- [ ] Oxlint `no-restricted-imports` boundaries (confirm per-folder overrides and a `process.env` restriction work, [ADR-012](adr/012-oxc-lint-and-format.md)) and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
+- [x] Oxlint `no-restricted-imports` boundaries and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md), [ADR-012](adr/012-oxc-lint-and-format.md)). Verified with throwaway fixtures (2026-10-15): per-folder overrides, the domain-imports-nothing rule, the SDK-only-in-`src/lib/ai` rule (`@anthropic-ai/sdk`, revisit when the client is chosen) and `process.env` only in `src/lib/env.ts` all fail the lint; overlapping overrides replace each other, so domain repeats the SDK rule. Vitest aliases `server-only` to a stub and `@/` to `src`, and sets `NEXT_PUBLIC_APP_VERSION`
 
 **Done when:** CI is green on an empty app and `pnpm db:up` starts a local database.
 

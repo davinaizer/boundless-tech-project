@@ -1,11 +1,69 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "react", "nextjs"],
+  "plugins": ["typescript", "unicorn", "oxc", "react", "nextjs", "node"],
   "categories": {
     "correctness": "error"
   },
   "rules": {},
   "env": {
     "builtin": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/**"],
+      "excludeFiles": ["src/lib/ai/**", "src/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@anthropic-ai/sdk",
+                "message": "The provider SDK is imported only in src/lib/ai (ADR-009 rule 6)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@anthropic-ai/sdk",
+                "message": "The provider SDK is imported only in src/lib/ai (ADR-009 rule 6)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@/app/**",
+                  "@/services/**",
+                  "@/data/**",
+                  "@/lib/**",
+                  "**/app/**",
+                  "**/services/**",
+                  "**/data/**",
+                  "**/lib/**"
+                ],
+                "message": "src/domain is pure and imports no other layer (ADR-009 rule 6)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/**"],
+      "rules": { "node/no-process-env": "error" }
+    },
+    {
+      "files": ["src/lib/env.ts"],
+      "rules": { "node/no-process-env": "off" }
+    }
+  ]
 }
