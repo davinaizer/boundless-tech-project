@@ -9,7 +9,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) and Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) done; Phase 2 (AI layer) next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) and Phase 2 (AI client and mock, `interpretQuery`, `explainResults`, eval) done; Phase 3 (API and UI) next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
 | Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 This README describes the intended design. Sections marked *pending* are completed once the code exists.
@@ -123,7 +123,7 @@ src/
   domain/              types, Zod schemas, SearchOffers port, estimateSavings
   lib/                 env.ts, version.ts, ai/ (model client and mock); log.ts planned
   data/                sample catalogue, in-memory and Postgres adapters
-  services/            findOffers; interpretQuery and explainResults planned
+  services/            findOffers, interpretQuery, explainResults
   components/          planned
 db/migrations/ scripts/        SQL migrations and the seed script
 evals/                         model eval cases, scorer and runner (`pnpm eval`)

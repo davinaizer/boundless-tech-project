@@ -1,6 +1,6 @@
 # Work plan
 
-Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint (`review-phase`, run in a fresh session) before the next phase is planned; it checks for architecture drift across tasks. Budget: the original plan was 8 hours including setup and documentation; it is now about 11h10 (see the time log and [ADR-010](adr/010-postgres-data-layer.md), [ADR-011](adr/011-local-first-delivery.md)). Record actual time in the table at the end.
+Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint (`review-phase`, run in a fresh session) before the next phase is planned; it checks for architecture drift across tasks. Phases 2.1 and 4.1 are small follow-ups to a closed phase and have no checkpoint of their own: each task goes through `review-task`. Budget: the original plan was 8 hours including setup and documentation; it is now about 12h (see the time log and [ADR-010](adr/010-postgres-data-layer.md), [ADR-011](adr/011-local-first-delivery.md)). Record actual time in the table at the end.
 
 ## Phase 0: Setup and governance (1h20)
 
@@ -44,10 +44,19 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 - [x] `explainResults` with grounding check (`src/services/explain-results.ts`; `describeMatch` and `groundExplanations` in `src/domain/match-reasons.ts`; 23 unit tests with the mock client and a stub port). One call, no retry: an answer with an unknown or repeated ID, empty or over-long text, or a numeric character, `£` or `%` is rejected whole, and every offer then shows its deterministic line (so the failure-modes rows for an unknown ID and for an unavailable model now say the same). Limit stated in architecture: spelled-out figures and claims such as "half price" are not caught, so the prompt instruction is their only guard. `PROMPT_VERSION` is `2026-10-15.4`. Live check 2026-10-15: three queries and a 10-offer call (1292 output tokens, so max tokens is 3000); a smoke test, not the eval
 - [x] Eval set of about 15 queries and an on-demand script; each run records `PROMPT_VERSION` (`evals/cases.ts`, `evals/score.ts`, `evals/run.ts`, `pnpm eval`; scorer and case tests in `pnpm check`, 9 tests). First recorded run 2026-10-15, prompt `2026-10-15.4`: 13/15, no fallbacks, 14/15 interpreted filters found offers; result and reading of the two failures in [eval-results](eval-results.md), repeated twice with the same outcome. The failures (a strict keyword match on "breakdown cover"; a category invented for a query outside the schema) are left as the baseline, not fixed: decisions on loosening the scorer and tightening the prompt are open
 - [x] Prompt tightening from the first eval run (follow-up, added after the eval): four out-of-schema cases added before the change (19 in total), `interpretQuery` prompt now says a mood word, a pet or a general question names no category, an audience needs the request to say who is going, and a keyword is one distinctive word; `PROMPT_VERSION` `2026-10-15.5`. Scorer kept strict because "breakdown cover" lost one offer against "breakdown". Three runs each: `.4` 16/19, `.5` 19/19, no regression in the keyword cases; recorded in [eval-results](eval-results.md) with its limits (the pet cases are not a clean held-out test; "for me" no longer gives an audience)
-- [ ] Service tests with the mocked client, including a timeout (`interpretQuery` and `explainResults` already have them with the mock client, every failure reason including `timeout`; this item is what is left, if anything, after the route handlers exist)
-- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
+- [x] Service tests with the mocked client, including a timeout: done within the `interpretQuery` and `explainResults` items (mock client, every failure reason including `timeout`). Consciously deferred to Phase 3: tests of the route handlers that call them, which cannot exist before the routes
+- [x] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR. Run 2026-10-15: DRIFT, two documentation items (stale README status and layout; service-test item and time log open), both fixed in the docs, no code or ADR change. Noted, not drift: `ANTHROPIC_CUSTOM_HEADERS` is still read by the SDK (stated in the client item above), and the root `vitest/` folder holds the `server-only` stub and the integration setup
 
 **Done when:** service tests pass and the eval has been run once and its result recorded.
+
+## Phase 2.1: AI boundary follow-ups (about 50 min, estimate)
+
+Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier project's LLM pipeline (patterns only, no code or data copied). Both tasks change the result types, schema or prompt that Phase 3 consumes, so they land before the routes and the request log line, not after.
+
+- [ ] Keep the failure reason. `interpretQuery` drops the reason of a failed attempt (`if (!result.ok) continue`) and `explainResults` falls through to its fallback, so the Phase 3 log line could say "fallback" but not why. `Interpretation` and `Explanations` carry the last failure reason (`refusal`, `truncated`, `invalid_json`, `unavailable`, `timeout`) for the log line. Decide at planning whether to also split a provider rejection of the request itself (HTTP 400, 401, 403, 404: a wrong key or a retired model ID) from `unavailable`, and not retry it: today it is retried and looks like an outage. Criteria: a test per reason with the mock client; the failure-modes rows and the Phase 2 notes in [architecture](architecture.md) updated; check whether [ADR-005](adr/005-llm-provider.md) lists the reasons, and if it does write a superseding note instead of editing it
+- [ ] Constrain `offerId` in the explain schema. `EXPLAIN_SCHEMA` has `offerId: { type: "string" }` and `groundExplanations` rejects an unknown ID only after the call. Build the schema per request with `enum` set to the IDs sent (at most `MAX_EXPLAINED_OFFERS`), so an invented ID cannot be produced; `groundExplanations` stays as the backstop. Bumps `PROMPT_VERSION`. Criteria: a unit test that the enum equals the IDs sent; one live explain call checked and recorded with the new version. The eval covers interpret only, so it is not re-run for this
+
+**Done when:** both tasks pass `pnpm check` and `review-task`, and the architecture document matches the result types Phase 3 will use.
 
 ## Phase 3: API and UI (2h05)
 
@@ -59,7 +68,7 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 - [ ] `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`
 - [ ] Input cap, and a content-type and body-size check before parsing (the rate limit moves to the optional deploy phase)
 - [ ] One error shape from all endpoints, `{ error: { code, message, requestId } }`, with codes defined in `src/domain` and mapped to UI error states; no internals in messages ([architecture](architecture.md))
-- [ ] One structured JSON log line per request (no query text); version shown in the UI footer
+- [ ] One structured JSON log line per request (no query text); version shown in the UI footer. The line carries the failure reason from Phase 2.1 and an estimated cost per call from token usage and a price constant (source and date of the price noted in the code; an estimate, not billing)
 - [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** a query works end to end locally with the real model and with the mock.
@@ -70,6 +79,15 @@ Phases are small and reversible. Phases 1 to 4 each end with a phase checkpoint 
 - [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
+
+## Phase 4.1: Eval additions (optional, about 45 min, estimate, outside the total)
+
+Eval-only: nothing in the runtime or the routes depends on these. Done before Phase 5 so the README can quote the numbers. If time is short, drop the second task first; the deterministic grounding check already guards the explain step.
+
+- [ ] No-LLM baseline in the eval: score `keywordFallback` over `EVAL_CASES` and print a "keywords only" column next to the model's result, so the eval shows what the model adds. Record it in [eval-results](eval-results.md)
+- [ ] Judge-graded eval for `explainResults`: a fixed set of filter and offer inputs, a rubric scored by a judge model (uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer), run on demand with the prompt version recorded. State its limits in `eval-results.md`: one model family grades itself, a small set, and a judge is a signal, not a measure
+
+**Done when:** a run is recorded in `eval-results.md` with both additions, or the second task is dropped and the reason recorded.
 
 ## Phase 5: Documentation and demo (1h)
 
@@ -112,10 +130,12 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 |---|---|---|
 | 0 | 1h20 | about 46 min (recorded by the author) |
 | 1 | 3h40 | 1h47 (recorded by the author) |
-| 2 | 2h25 | |
+| 2 | 2h25 | 2h (recorded by the author) |
+| 2.1 | 0h50 | |
 | 3 | 2h05 | |
 | 4 | 0h40 | |
+| 4.1 (optional) | 0.75h | |
 | 5 | 1h | |
 | 6 (optional) | 0.75h | |
 
-Planned total, phases 0 to 5, is about 11h10. The first plan was 8h. The roadmap additions added about 45 minutes, ADR-010 and ADR-011 added about 1h20 net (the Postgres adapter and container about 2h, less the Netlify spike and the rate limit moved to Phase 6), the model timeout and error shape added about 25 minutes, and the phase checkpoints for phases 1 to 4 added about 40 minutes. All figures are estimates, not measurements. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).
+Planned total, phases 0 to 5 without the optional 4.1, is about 12h. The first plan was 8h. Phase 2.1 added about 50 minutes. The roadmap additions added about 45 minutes, ADR-010 and ADR-011 added about 1h20 net (the Postgres adapter and container about 2h, less the Netlify spike and the rate limit moved to Phase 6), the model timeout and error shape added about 25 minutes, and the phase checkpoints for phases 1 to 4 added about 40 minutes. All figures are estimates, not measurements. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).
