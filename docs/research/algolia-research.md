@@ -2,7 +2,7 @@
 
 - **Date observed:** 2026-10-14
 - **Provenance:** analysis supplied by the project author from the public site's client-side behaviour (loaded pages, client code, and one search). Not independently reproduced.
-- **Purpose:** inform the data layer and how the finder is positioned ([ADR-004](../adr/004-data-layer.md)).
+- **Purpose:** inform the data layer and how the finder is positioned ([ADR-004](../adr/004-data-layer.md), superseded by [ADR-010](../adr/010-postgres-data-layer.md)).
 
 ## Observed
 

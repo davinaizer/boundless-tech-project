@@ -1,6 +1,6 @@
 # ADR-003: Stack and hosting
 
-- **Status:** Accepted
+- **Status:** Accepted. The hosting decision is superseded by [ADR-011](011-local-first-delivery.md); the stack decision stands.
 - **Date:** 2026-10-14
 - **Decision owner:** Davi
 

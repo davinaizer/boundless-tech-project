@@ -81,5 +81,5 @@ Feature flags, internationalisation at scale, design-system packaging, observabi
 ## Limits of this note
 
 - On Netlify, platform-managed items (cache, skew protection) are partly covered above; the rest of the self-hosting list was not mapped to Netlify.
-- Function timeouts remain unverified; the Phase 0 deploy spike is the check ([ADR-003](../adr/003-stack-and-hosting.md)).
+- Netlify documents a 60-second synchronous function limit that is not configurable (configuration docs, checked 2026-10-15, read through a summarising tool). Other deployment checks moved to the optional deploy phase ([ADR-011](../adr/011-local-first-delivery.md)).
 - Extracts came from a summarising tool, not a full read of each page.

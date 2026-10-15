@@ -2,7 +2,7 @@
 
 - **Date observed:** 2026-10-14
 - **Provenance:** analysis supplied by the project author from the public homepage's response headers, HTML and Content-Security-Policy (CSP). Not independently reproduced.
-- **Purpose:** inform stack and integration decisions (see [ADR-003](../adr/003-stack-and-hosting.md) and [ADR-004](../adr/004-data-layer.md)).
+- **Purpose:** inform stack and integration decisions (see [ADR-003](../adr/003-stack-and-hosting.md), [ADR-004](../adr/004-data-layer.md), now superseded by [ADR-010](../adr/010-postgres-data-layer.md), and [ADR-011](../adr/011-local-first-delivery.md)).
 
 ## Observed
 
@@ -43,6 +43,6 @@ The CSP is in report-only mode and reports violations to a custom Next.js API ro
 ## Implications for this project
 
 - Next.js App Router with TypeScript matches the observed framework.
-- Offers appear to come from a CMS and be served from a search index, not a database owned by the front end. The data layer is therefore a port with adapters ([ADR-004](../adr/004-data-layer.md)).
-- Netlify hosting makes Netlify the preferred deployment target ([ADR-003](../adr/003-stack-and-hosting.md)).
+- Offers appear to come from a CMS and be served from a search index, not a database owned by the front end. The data layer is therefore a port with adapters ([ADR-010](../adr/010-postgres-data-layer.md)).
+- Netlify hosting makes Netlify the preferred deployment target if the app is deployed ([ADR-011](../adr/011-local-first-delivery.md)).
 - Keyword and category-facet discovery already exists, so the finder's value is the natural-language intent layer and the value-for-fee estimate, not search as such.

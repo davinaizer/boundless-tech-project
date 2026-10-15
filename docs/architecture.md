@@ -40,14 +40,15 @@ flowchart LR
         R2["POST /api/search"]
         R3["POST /api/explain"]
         S1["interpretQuery"]
-        S2["searchOffers port"]
+        S2["findOffers (SearchOffers port)"]
         S3["estimateSavings"]
         S4["explainResults"]
         AI["ai client (single module)"]
     end
 
     subgraph Adapters["Search adapters"]
-        A1["In-memory seed (built)"]
+        A0["Postgres (built, default when DATABASE_URL is set)"]
+        A1["In-memory seed (built, tests and no-database run)"]
         A2["CMS-backed (documented, not built)"]
         A3["Search-service-backed (documented, not built)"]
     end
@@ -62,6 +63,7 @@ flowchart LR
     R2 --> S3
     R3 --> S4 --> AI
     AI --> LLM
+    S2 --> A0
     S2 --> A1
     S2 -.-> A2
     S2 -.-> A3
@@ -104,12 +106,57 @@ sequenceDiagram
 |---|---|---|
 | UI (`src/app`) | Input, chips, results, savings, loading, empty and error states | API contracts only |
 | Route Handlers (`src/app/api`) | Validate input, orchestrate, shape responses | services |
-| Services (`src/services`) | `interpretQuery`, `explainResults`, `searchOffers` port and adapters | domain, `lib/ai` |
-| Domain (`src/domain`) | Types, Zod schemas, `estimateSavings`, grounding check. Pure | nothing |
+| Services (`src/services`) | `interpretQuery`, `explainResults`, `findOffers` (calls the `SearchOffers` port) | domain, `lib/ai` |
+| Domain (`src/domain`) | Types, Zod schemas, the `SearchOffers` port (an interface only), `estimateSavings`, grounding check. Pure | nothing |
 | AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK |
-| Data (`src/data`) | Fictional sample catalogue | domain |
+| Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain |
 
 Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by ESLint.
+
+## Folder structure
+
+Target layout. Folders are created when they get content ([ADR-009](adr/009-nextjs-conventions.md) rule 2), so most of this does not exist yet. Parts marked *proposal* go beyond ADR-009 and are confirmed in the Phase 0 and Phase 1 plans.
+
+```text
+boundless-tech-test/
+|-- .agents/skills/              task workflow skills (exists); .claude/skills links here
+|-- .github/workflows/ci.yml     typecheck, lint, unit, e2e, integration (Postgres service)
+|-- db/migrations/               SQL migrations (migration tool chosen in Phase 1)
+|-- docs/                        brief, adr, research, design, architecture, roadmap, TODO (exists)
+|-- e2e/                         Playwright: two happy-path specs (proposal)
+|-- evals/                       cases and run script, on demand, real model (proposal)
+|-- scripts/                     migrate and seed scripts (proposal)
+|-- src/
+|   |-- app/                     routes and Route Handlers only
+|   |   |-- layout.tsx, page.tsx, globals.css
+|   |   |-- loading.tsx, error.tsx, not-found.tsx, global-error.tsx
+|   |   |-- _components/         route-specific UI: query box, filter chips, offer list, savings panel
+|   |   `-- api/
+|   |       |-- interpret/route.ts
+|   |       |-- search/route.ts
+|   |       |-- explain/route.ts
+|   |       `-- health/route.ts
+|   |-- components/              shared UI, only when a second route needs it
+|   |-- domain/                  pure: types, Zod schemas, SearchOffers port, estimateSavings, grounding check
+|   |-- services/                interpretQuery, explainResults, findOffers (server-only)
+|   |-- lib/
+|   |   |-- ai/                  the only code that calls the model: client, provider, mock (server-only)
+|   |   |-- env.ts               the only reader of process.env
+|   |   `-- log.ts               the one-line JSON request log (proposal)
+|   `-- data/                    sample catalogue, adapters, adapter selection (server-only)
+|-- AGENTS.md, DESIGN.md, README.md
+|-- compose.yaml                 local Postgres (Podman or Docker)
+|-- .env.example                 dev-only values, no secrets
+`-- package.json, tsconfig.json, next.config.ts, eslint config, vitest config, playwright config
+```
+
+Conventions inside `src/`, from ADR-009: components are `PascalCase.tsx`, all other files `kebab-case.ts`, and the import boundaries are enforced by ESLint.
+
+Proposals:
+- Unit tests sit beside the code as `*.test.ts`. Integration tests sit beside it as `*.integration.test.ts` and run with `pnpm test:integration`. The contract test suite for the port lives with the port in `src/domain` and is imported by each adapter's integration test.
+- `src/data` holds the sample catalogue module, one file per adapter, and a single `index.ts` that returns the adapter for the current environment. Nothing else chooses an adapter.
+- `scripts/` and the seed run outside Next.js. Modules marked `server-only` cannot be imported there without the same handling as the Vitest setup, so Phase 1 decides how the seed script reads the sample catalogue.
+- The Tailwind theme mirrors the tokens in [DESIGN.md](../DESIGN.md).
 
 ## Contracts
 
@@ -125,6 +172,32 @@ All requests and responses are validated with Zod at the boundary.
 | `audience` | solo, couple or family | |
 | `tier` | standard or plus | |
 | `keywords` | list of strings | |
+
+### `SearchOffers` port
+
+The only way services reach the catalogue. It is an interface in `src/domain`; adapters in `src/data` implement it. It is async because the Postgres adapter is.
+
+| Operation | In | Out | Used by |
+|---|---|---|---|
+| `search` | `Filters` | ranked `Offer[]` (empty list when nothing matches, never an error) | `/api/search` |
+| `getByIds` | list of offer IDs | `Offer[]` | `/api/explain` |
+
+The model never reaches the port. Adapters translate typed filters into their own query form; no adapter accepts query strings from the model.
+
+Behaviour every adapter must share, written as one contract test suite run against each adapter:
+
+| Behaviour | Status |
+|---|---|
+| Expired offers hidden by default | Decided |
+| Stable order for equal ranks (for example a tiebreak on `id`) | Decided: needed for repeatable tests and e2e |
+| Ranking criteria | Open: decide in the Phase 1 plan |
+| `tier` rule (does `plus` include Standard offers) | Open |
+| `categories` any-of or all-of | Open |
+| `region` matching (exact, case-insensitive, substring) | Open |
+| `maxPricePerPerson` against `typicalPricePerPerson`, and offers with no price | Open |
+| Fields searched by `keywords` | Open |
+
+A search-service-backed adapter would support only the fields evidenced in that index ([ADR-004](adr/004-data-layer.md) evidence; category, expiry and probably tier). That limit belongs to the adapter, not the port.
 
 ### Offer model
 
@@ -154,6 +227,8 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 
 **Operations.** Each request writes one JSON log line: request ID, endpoint, latency, model calls, token counts, fallback used, outcome, and `PROMPT_VERSION`. Query text is never logged. The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`. Scope tiers and trade-offs: [roadmap](roadmap.md).
 
+**Errors and request checks.** Route Handlers reject a wrong content type or an oversized body before parsing (the limit is set in config, a heuristic), then validate with Zod. Every endpoint returns the same error shape for invalid requests and unexpected server errors: `{ error: { code, message, requestId } }` with an HTTP status. Messages are safe to show and carry no internals; `code` comes from a small closed set defined in `src/domain`, finalised in Phase 3. A model failure is not an error response: it triggers the fallback described below, and `/api/interpret` reports `source: "fallback"`.
+
 **Savings estimate.** Each offer has `typicalSavingPerUse` and `assumedUsesPerYear` (illustrative sample values). The estimate sums them over the shortlist and compares the total with the tier fee (£45 or £78, from the public site as of 2026-10-14). Always labelled illustrative.
 
 ## Failure modes
@@ -162,17 +237,18 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 |---|---|
 | Model returns invalid filters | Retry once, then keyword fallback; chips show what was understood |
 | Model refuses or is truncated | Treated as invalid; same fallback |
+| Model call exceeds the timeout | Aborted and counted as the failed attempt: retry once, then keyword fallback. Worst case is two timeouts. The timeout is set in config and starts as a heuristic, to be tuned from logged latency |
 | Explanation cites an unknown offer ID | Rejected; show deterministic match reasons |
 | Model or network unavailable | Search still works from keywords and chips; explanations omitted |
 | No matches | Empty state suggests broadening; chips remain editable |
 | Empty or whitespace input | No model call; the UI prompts for a request |
-| Abuse or loops | Input cap, rate limit, provider spend limit ([ADR-006](adr/006-demo-protection.md)) |
+| Abuse or loops | Input cap always; rate limit and provider spend limit if deployed ([ADR-006](adr/006-demo-protection.md), [ADR-011](adr/011-local-first-delivery.md)) |
 
 ## Production path (not built)
 
 Scope tiers, trade-offs and scalability hypotheses are in the [roadmap](roadmap.md). The list below is the data and AI path.
 
-- Replace the in-memory adapter with a search-service-backed adapter ([ADR-004](adr/004-data-layer.md)). The adapter translates typed filters into the service's filter syntax; the model never writes filter strings.
+- Add a search-service-backed adapter beside the Postgres and in-memory adapters ([ADR-010](adr/010-postgres-data-layer.md)). The adapter translates typed filters into the service's filter syntax; the model never writes filter strings.
 - Fields beyond category, expiry and tier would need index enrichment (for example tagging records at index time) or be handled as free-text query.
 - Check whether the search service's own AI features already cover natural-language queries before extending this layer.
 - Add query logging only with a data-protection review. Today only query text is sent to the model.

@@ -1,6 +1,6 @@
 # ADR-004: Data layer
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-010](010-postgres-data-layer.md)
 - **Date:** 2026-10-14
 - **Decision owner:** Davi
 

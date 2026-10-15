@@ -1,6 +1,6 @@
 # ADR-006: Public demo protection
 
-- **Status:** Accepted
+- **Status:** Accepted. Scope narrowed by [ADR-011](011-local-first-delivery.md): the rate limit and provider spend limit apply only if the app is deployed.
 - **Date:** 2026-10-14
 - **Decision owner:** Davi
 

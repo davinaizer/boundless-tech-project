@@ -1,6 +1,6 @@
 # ADR-007: Test strategy
 
-- **Status:** Accepted
+- **Status:** Accepted. Extended by [ADR-010](010-postgres-data-layer.md) with an integration test layer against Postgres; the other decisions stand.
 - **Date:** 2026-10-14
 - **Decision owner:** Davi
 

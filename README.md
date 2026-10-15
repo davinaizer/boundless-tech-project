@@ -10,7 +10,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
 | Implementation | Not started. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
-| Live demo and recorded demo | Pending: links will be added here when available |
+| Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 This README describes the intended design. Sections marked *pending* are completed once the code exists.
 
@@ -41,10 +41,11 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | Framework | Next.js (App Router), React, TypeScript strict |
 | Styling | Tailwind |
 | Validation | Zod |
-| Tests | Vitest (unit), Playwright (two happy-path e2e tests), on-demand eval script |
+| Tests | Vitest (unit and integration against Postgres), Playwright (two happy-path e2e tests), on-demand eval script |
 | CI | GitHub Actions |
-| Hosting | Netlify, with Vercel as fallback ([ADR-003](docs/adr/003-stack-and-hosting.md)) |
-| Data | Fictional sample catalogue behind a `SearchOffers` port; no database ([ADR-004](docs/adr/004-data-layer.md)) |
+| Data | Fictional sample catalogue behind a `SearchOffers` port: Postgres adapter when `DATABASE_URL` is set, in-memory adapter otherwise ([ADR-010](docs/adr/010-postgres-data-layer.md)) |
+| Local services | Podman runs Postgres from a Compose file; the app runs with `pnpm dev` ([ADR-011](docs/adr/011-local-first-delivery.md)) |
+| Hosting | Local-first. If deployed: Netlify, with Vercel as fallback ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 ## Where to look
 
@@ -72,13 +73,15 @@ If the model output is invalid, the app retries once and then falls back to keyw
 |---|---|
 | [001](docs/adr/001-problem-and-idea.md) | Natural-language finder plus a savings estimate, chosen after a limited competitor scan |
 | [002](docs/adr/002-ai-boundary.md) | Model translates and explains; retrieval and savings are deterministic |
-| [003](docs/adr/003-stack-and-hosting.md) | Next.js and TypeScript on Node; Netlify with Vercel fallback |
-| [004](docs/adr/004-data-layer.md) | Port with an in-memory adapter; production adapters documented, not built |
+| [003](docs/adr/003-stack-and-hosting.md) | Next.js and TypeScript on Node (hosting superseded by ADR-011) |
+| [004](docs/adr/004-data-layer.md) | Superseded by ADR-010 |
 | [005](docs/adr/005-llm-provider.md) | Claude Haiku 5.5 behind a single module |
-| [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit |
+| [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit (the last two only if deployed) |
 | [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e paths, on-demand eval |
 | [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
 | [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |
+| [010](docs/adr/010-postgres-data-layer.md) | Postgres adapter as the default behind the port; in-memory adapter kept for tests and a no-database run |
+| [011](docs/adr/011-local-first-delivery.md) | Local-first; Podman for Postgres; deploy only at a gate after the demo is recorded |
 
 ## Evidence and assumptions
 
@@ -90,16 +93,17 @@ AI assistance is part of the workflow and is disclosed. Architecture, the AI bou
 
 ## Setup
 
-*Pending: completed in Phase 5 once the app exists.* It will cover prerequisites (Node, pnpm), environment variables (an Anthropic API key, kept server-side and never committed), running the app, and running the unit, e2e and eval commands.
+*Pending: completed in Phase 5 once the app exists.* It will cover prerequisites (Node, pnpm, and Podman only for the Postgres path), environment variables (an Anthropic API key, kept server-side and never committed), running the app, and running the unit, e2e and eval commands.
 
 ## Trade-offs
 
 Current, from the ADRs:
 
-- **No database.** Catalogue data is read-only sample data, so a typed seed behind a port is enough. The cost is less "database" signal; a different adapter is a contained change.
+- **Postgres plus an in-memory fallback.** The data layer shows schema, migrations and safe query building, and the port has two real implementations. The cost is about 2 hours (estimate) and a container for the Postgres path; the in-memory adapter keeps the app runnable without one ([ADR-010](docs/adr/010-postgres-data-layer.md)).
+- **Local-first, deployment optional.** The recorded demo is the guaranteed deliverable; a live link is added only if the work is complete. The cost is no live link by default, and reviewers need an API key or the mock provider to try the AI themselves ([ADR-011](docs/adr/011-local-first-delivery.md)).
 - **Sample data only.** Savings are illustrative, not claims about real offers.
 - **Small model, no benchmark.** Parse quality is checked by a hand-written eval, which is a regression check, not a measure of production accuracy.
-- **Best-effort rate limiting.** In-memory limits do not hold across serverless instances. The provider spend limit is the real control.
+- **Best-effort rate limiting, only if deployed.** In-memory limits do not hold across serverless instances. The provider spend limit is the real control.
 - **Only some filters are evidenced in the production index.** Category, expiry and probably membership level were observed. Region, price and audience exist only in the sample data.
 
 Operational scope (observability, health check, versioning, OpenAPI, analytics) and scalability hypotheses are in the [roadmap](docs/roadmap.md).
@@ -111,6 +115,7 @@ Operational scope (observability, health check, versioning, OpenAPI, analytics) 
 ```text
 AGENTS.md          working rules for contributors and AI agents
 DESIGN.md          visual theme (design tokens and rationale)
+compose.yaml       local Postgres for Podman or Docker (not yet created)
 docs/
   brief/           the challenge brief
   adr/             decision records
