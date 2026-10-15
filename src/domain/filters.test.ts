@@ -25,6 +25,13 @@ describe("Filters", () => {
     ]);
   });
 
+  it("de-duplicates keywords case-insensitively, keeping the first spelling", () => {
+    expect(Filters.parse({ keywords: ["Garden", "kids", "garden", "KIDS"] }).keywords).toEqual([
+      "Garden",
+      "kids",
+    ]);
+  });
+
   it("rejects unknown keys", () => {
     expect(Filters.safeParse({ colour: "red" }).success).toBe(false);
   });

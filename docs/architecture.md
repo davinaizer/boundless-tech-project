@@ -171,7 +171,7 @@ All requests and responses are validated with Zod at the boundary.
 | `maxPricePerPerson` | number | Zod validates range; not expressible in the model's JSON schema |
 | `audience` | solo, couple or family | |
 | `tier` | standard or plus | |
-| `keywords` | list of strings | |
+| `keywords` | list of strings | de-duplicated case-insensitively, first spelling kept |
 
 ### `SearchOffers` port
 
@@ -194,7 +194,7 @@ Behaviour every adapter must share, written as one contract test suite (`src/dom
 | `audience` | The offer's audience list contains the value |
 | `region` | Trimmed, case-insensitive equality. Offers with region `UK-wide` match every region filter. No substring or alias matching |
 | `maxPricePerPerson` | Inclusive: `typicalPricePerPerson <= max`. Price is required, so a free offer has price `0` and passes every limit |
-| `keywords` | Any-of; case-insensitive substring over `title` and `partner` only |
+| `keywords` | Any-of; case-insensitive substring over `title` and `partner` only, each field searched on its own (no match across the two). `Filters` removes repeated keywords, so each distinct keyword counts once toward ranking |
 | Expiry | Offers with `expiryDate < today` are hidden; an offer is valid through its expiry date. There is no option to include expired offers |
 | Clock | `today` is an argument, so adapters read no clock and tests need no fake timers |
 | Ranking | Keywords matched (more first), then estimated annual saving `typicalSavingPerUse × assumedUsesPerYear` (higher first), then `id` ascending. Annual saving is compared in whole pence so adapters cannot disagree on float ties |

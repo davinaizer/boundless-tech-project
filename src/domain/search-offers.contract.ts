@@ -177,6 +177,13 @@ export function describeSearchOffersContract(name: string, create: CreateSearchO
           ]);
         });
 
+        it("matches within one field, never across title and partner", async () => {
+          const joined = [offer("a", { title: "Garden pass", partner: "Plain partner" })];
+          expect(await search(joined, { keywords: ["pass\nplain"] })).toEqual([]);
+          expect(await search(joined, { keywords: ["pass plain"] })).toEqual([]);
+          expect(await search(joined, { keywords: ["passplain"] })).toEqual([]);
+        });
+
         it("does not search region or category", async () => {
           expect(await search(offers, { keywords: ["city"] })).toEqual([]);
           expect(await search(offers, { keywords: ["events"] })).toEqual([]);

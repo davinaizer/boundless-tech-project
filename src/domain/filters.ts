@@ -27,6 +27,16 @@ export const Filters = z.strictObject({
   keywords: z
     .array(text(FILTER_LIMITS.maxKeywordLength))
     .max(FILTER_LIMITS.maxKeywords)
-    .default([]),
+    .default([])
+    // A repeated keyword must not count twice toward ranking; keep the first spelling.
+    .transform((values) => {
+      const seen = new Set<string>();
+      return values.filter((value) => {
+        const key = value.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }),
 });
 export type Filters = z.infer<typeof Filters>;
