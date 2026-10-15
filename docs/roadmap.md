@@ -99,6 +99,12 @@ Status of evidence: the scope decisions are judgements made against the original
 - **Triggers to split (my judgement, not a standard):** more than one client, background or long-running jobs, WebSockets, a team that owns the backend independently, or a different language. The port, services and domain layers are framework-light, so they could move into a service with the Route Handlers becoming thin callers.
 - **Cost of splitting:** a second deployment, CORS or a proxy, a shared types package, and a larger CI.
 
+### Judge-graded eval for the explain step
+
+- **Not built.** An on-demand eval where a judge model scores `explainResults` lines against a rubric: uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer.
+- **Why:** the deterministic grounding check already guards what a line may say, and a rejected or missing line falls back to `describeMatch`, so a bland sentence is a minor failure. The only judge available without touching `src/lib/ai` is the same model family that wrote the lines, on a set of about 18 lines: a weak, probably lenient signal, and it would need its own limits section.
+- **Revisit when:** explanation quality becomes a product goal or the explain prompt changes often. Use a stronger or different judge, check it against known-bad lines first, and treat the result as a signal, not a measure.
+
 ### Dependency scanning in CI
 
 - **Not built.** Examples are `pnpm audit` or Dependabot.
