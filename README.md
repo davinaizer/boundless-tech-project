@@ -127,7 +127,7 @@ src/
   components/          planned
 db/migrations/ scripts/        SQL migrations and the seed script
 e2e/ evals/                    Playwright specs, model eval (planned)
-.github/workflows/ci.yml       check and build
+.github/workflows/ci.yml       check and build; integration (Postgres service)
 compose.yaml, .env.example     local Postgres for dev and integration tests (Podman or Docker), dev-only values
 .agents/skills/                task workflow skills (.claude/skills links here)
 package.json and tool configs  Next.js, TypeScript, Vitest, Oxlint, Oxfmt

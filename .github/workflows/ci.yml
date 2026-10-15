@@ -26,3 +26,36 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm build
+
+  # The Postgres contract suite, plus the migrate and seed scripts, against a
+  # service container (ADR-010). Same image and dev-only values as compose.yaml.
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: docker.io/library/postgres:18-alpine
+        env:
+          POSTGRES_USER: benefits
+          POSTGRES_PASSWORD: benefits
+          POSTGRES_DB: benefits_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U benefits -d benefits_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      TEST_DATABASE_URL: postgres://benefits:benefits@localhost:5432/benefits_test
+      DATABASE_URL: postgres://benefits:benefits@localhost:5432/benefits_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:integration
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
