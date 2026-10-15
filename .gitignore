@@ -1,16 +1,17 @@
-# .NET build output
-**/bin/
-**/obj/
-
-# .NET user files
-*.user
-*.suo
-.vs/
-
-# Node dependencies and build output
+# Dependencies
 **/node_modules/
-**/dist/
-client/.vite/
+
+# Next.js build output
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Test output (Playwright)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 
 # Environment files
 .env
@@ -20,5 +21,6 @@ client/.vite/
 # Logs
 *.log
 
-# macOS
+# OS and tool state
 .DS_Store
+.claude/settings.local.json

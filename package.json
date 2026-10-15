@@ -1,0 +1,49 @@
+{
+  "name": "boundless-tech-test",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm fmt:check && pnpm test",
+    "db:up": "podman compose up -d --wait",
+    "db:down": "podman compose down",
+    "db:migrate": "node-pg-migrate up -m db/migrations -j sql",
+    "db:seed": "tsx --conditions=react-server scripts/seed.ts",
+    "test:integration": "vitest run -c vitest.integration.config.mts",
+    "eval": "NEXT_PUBLIC_APP_VERSION=eval AI_PROVIDER=anthropic tsx --conditions=react-server --env-file-if-exists=.env.local evals/run.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "next": "16.4.1",
+    "pg": "8.23.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "node-pg-migrate": "9.0.0",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "tailwindcss": "^4",
+    "tsx": "4.23.15",
+    "typescript": "^5",
+    "vitest": "5.0.4"
+  },
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
+  "packageManager": "pnpm@11.23.0"
+}

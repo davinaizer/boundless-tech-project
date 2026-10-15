@@ -1,0 +1,39 @@
+# Local Postgres for development (ADR-010, ADR-011). Engine-neutral: works with
+# `podman compose` and `docker compose`. Values here are dev-only, not secrets.
+services:
+  postgres:
+    image: docker.io/library/postgres:18-alpine
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: benefits
+      POSTGRES_PASSWORD: benefits
+      POSTGRES_DB: benefits
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benefits -d benefits"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # Integration tests only (`pnpm test:integration`), so they never touch the
+  # dev data. Stored in memory: empty again after every restart.
+  postgres-test:
+    image: docker.io/library/postgres:18-alpine
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: benefits
+      POSTGRES_PASSWORD: benefits
+      POSTGRES_DB: benefits_test
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benefits -d benefits_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres-data:
