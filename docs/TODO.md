@@ -20,7 +20,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 - [x] `src/lib/env.ts`: Zod-parsed environment, the only reader of `process.env` ([ADR-009](adr/009-nextjs-conventions.md)). Server-only; `parseEnv` is unit-tested; holds `NEXT_PUBLIC_APP_VERSION` and optional `DATABASE_URL`. Each later feature adds its own variable (model provider and key in Phase 2). `scripts/` is outside `src/` and does not import this module
 - [x] Types and Zod schemas: `Offer`, `Filters`, `Category` (`src/domain/offer.ts`, `filters.ts`; strict objects, limits are heuristics in `FILTER_LIMITS`; behaviour decisions stay with the contract item)
-- [ ] Fictional sample catalogue, labelled, across the public categories, with tier and optional expiry date (expired hidden by default)
+- [x] Fictional sample catalogue, labelled, across the public categories, with tier and optional expiry date (expired hidden by default) (`src/data/sample-catalogue.ts`: 24 offers, four per category, validated at load; edge cases for the contract tests included; region values are a sample vocabulary until the contract item decides matching; `server-only` per ADR-009, so the seed script's access is decided in its own item)
 - [ ] Decide the open `SearchOffers` behaviours (ranking, tier rule, category any-of or all-of, region matching, price handling, keyword fields) in the plan, and write them as the contract test suite ([architecture](architecture.md#searchoffers-port))
 - [ ] `SearchOffers` port (interface in `src/domain`) and in-memory adapter in `src/data`; `findOffers` service; one adapter-selection point
 - [ ] Decide how `scripts/` reads `server-only` modules (the seed script) and where migrations live

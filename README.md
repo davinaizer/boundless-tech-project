@@ -122,7 +122,8 @@ src/
   app/                 pages and Route Handlers (health endpoint exists)
   domain/              types, Zod schemas, SearchOffers port
   lib/                 env.ts, version.ts; ai/ and log.ts planned
-  services/ data/ components/   planned
+  data/                fictional sample catalogue; adapters planned
+  services/ components/   planned
 db/migrations/ scripts/        SQL migrations, migrate and seed scripts (planned)
 e2e/ evals/                    Playwright specs, model eval (planned)
 .github/workflows/ci.yml       check and build
