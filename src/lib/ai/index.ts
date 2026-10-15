@@ -16,7 +16,9 @@ function createAiClient(): AiClient {
   if (env.AI_PROVIDER === "mock") return createMockAiClient();
   // env.ts already rejects this combination; the check narrows the type.
   if (env.ANTHROPIC_API_KEY === undefined) throw new Error("ANTHROPIC_API_KEY is not set");
-  return createAnthropicClient(createAnthropicSdk(env.ANTHROPIC_API_KEY).messages);
+  return createAnthropicClient(createAnthropicSdk(env.ANTHROPIC_API_KEY).messages, {
+    timeoutMs: env.AI_TIMEOUT_MS,
+  });
 }
 
 let aiClient: AiClient | undefined;

@@ -60,6 +60,19 @@ describe("parseEnv", () => {
     ).toBe(key);
   });
 
+  it("defaults AI_TIMEOUT_MS to 8000 when unset or empty", () => {
+    expect(parseEnv({ ...version }).AI_TIMEOUT_MS).toBe(8000);
+    expect(parseEnv({ ...version, AI_TIMEOUT_MS: "" }).AI_TIMEOUT_MS).toBe(8000);
+  });
+
+  it("parses AI_TIMEOUT_MS as a whole number of milliseconds up to 60 s", () => {
+    expect(parseEnv({ ...version, AI_TIMEOUT_MS: "12000" }).AI_TIMEOUT_MS).toBe(12000);
+    expect(parseEnv({ ...version, AI_TIMEOUT_MS: "60000" }).AI_TIMEOUT_MS).toBe(60000);
+    for (const value of ["0", "-1", "1.5", "soon", "60001", "3000000000"]) {
+      expect(() => parseEnv({ ...version, AI_TIMEOUT_MS: value })).toThrow();
+    }
+  });
+
   it("does not put the API key in the error message", () => {
     const secret = "sk-sentinel-key";
     let message = "";

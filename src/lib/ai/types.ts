@@ -15,7 +15,13 @@ export type ModelUsage = { inputTokens: number; outputTokens: number };
 
 // Every way a call can fail to give usable JSON. The services treat each one as
 // a failed attempt (retry once, then fall back); none of them is an error response.
-export type StructuredFailure = "refusal" | "truncated" | "invalid_json" | "unavailable";
+// "timeout" is kept apart from "unavailable" so the timeout can be tuned from logs.
+export type StructuredFailure =
+  | "refusal"
+  | "truncated"
+  | "invalid_json"
+  | "unavailable"
+  | "timeout";
 
 export type StructuredResult =
   | { ok: true; data: unknown; usage: ModelUsage }

@@ -15,7 +15,7 @@ describe("getAiClient", () => {
 
   it("uses the Anthropic client when AI_PROVIDER is anthropic", async () => {
     vi.doMock("@/lib/env", () => ({
-      env: { AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: "test-key" },
+      env: { AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: "test-key", AI_TIMEOUT_MS: 8000 },
     }));
     const { getAiClient } = await import("./index");
     expect(getAiClient()).not.toHaveProperty("calls");

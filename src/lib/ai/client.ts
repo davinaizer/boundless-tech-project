@@ -27,9 +27,16 @@ export function createAnthropicSdk(apiKey: string): Anthropic {
   });
 }
 
-export function createAnthropicClient(messages: MessagesApi): AiClient {
+// The timeout is our own signal, not the SDK's `timeout` option, so it covers the
+// whole call including reading the response body. A timeout counts as a failed
+// attempt like any other (architecture: failure modes).
+export function createAnthropicClient(
+  messages: MessagesApi,
+  { timeoutMs }: { timeoutMs: number },
+): AiClient {
   return {
     async generateStructured({ system, prompt, schema, maxTokens, signal }) {
+      const timeout = AbortSignal.timeout(timeoutMs);
       let message: Anthropic.Message;
       try {
         message = await messages.create(
@@ -41,12 +48,14 @@ export function createAnthropicClient(messages: MessagesApi): AiClient {
             thinking: { type: "adaptive" },
             output_config: { effort: EFFORT, format: { type: "json_schema", schema } },
           },
-          { signal },
+          { signal: signal ? AbortSignal.any([signal, timeout]) : timeout },
         );
       } catch (error) {
         // Network, API status and abort errors all mean "no answer". Anything
         // else is a bug in this code and must not be hidden behind the fallback.
-        if (error instanceof Anthropic.AnthropicError) return { ok: false, reason: "unavailable" };
+        if (error instanceof Anthropic.AnthropicError) {
+          return { ok: false, reason: timeout.aborted ? "timeout" : "unavailable" };
+        }
         throw error;
       }
       return readResult(message);

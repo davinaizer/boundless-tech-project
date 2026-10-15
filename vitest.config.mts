@@ -20,6 +20,7 @@ export default defineConfig({
       DATABASE_URL: "",
       AI_PROVIDER: "",
       ANTHROPIC_API_KEY: "",
+      AI_TIMEOUT_MS: "",
     },
     include: ["src/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],

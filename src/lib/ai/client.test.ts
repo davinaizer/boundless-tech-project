@@ -18,15 +18,27 @@ function reply(stopReason: string, text: string): Anthropic.Message {
   } as unknown as Anthropic.Message;
 }
 
+type MessagesApi = Pick<Anthropic["messages"], "create">;
+
+function clientWith(create: unknown, timeoutMs = 5_000) {
+  return createAnthropicClient({ create } as unknown as MessagesApi, { timeoutMs });
+}
+
 function clientReturning(result: Anthropic.Message | Error) {
   const create = vi.fn(() =>
     result instanceof Error ? Promise.reject(result) : Promise.resolve(result),
   );
-  const client = createAnthropicClient({ create } as unknown as Pick<
-    Anthropic["messages"],
-    "create"
-  >);
-  return { client, create };
+  return { client: clientWith(create), create };
+}
+
+// Like the SDK: never answers, and rejects with an abort error when the signal aborts.
+function hangingCreate() {
+  return vi.fn(
+    (_body: unknown, { signal }: { signal: AbortSignal }) =>
+      new Promise((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new Anthropic.APIUserAbortError()));
+      }),
+  );
 }
 
 const usage = { inputTokens: 120, outputTokens: 30 };
@@ -43,9 +55,14 @@ describe("createAnthropicClient", () => {
 
   it("sends one request with the model, schema, low effort and the caller's signal", async () => {
     const { client, create } = clientReturning(reply("end_turn", "{}"));
-    const signal = new AbortController().signal;
-    await client.generateStructured({ ...request, signal });
+    const caller = new AbortController();
+    await client.generateStructured({ ...request, signal: caller.signal });
     expect(create).toHaveBeenCalledTimes(1);
+    // The signal sent is the caller's combined with the timeout, so it follows the caller.
+    const sent = (create.mock.calls[0] as unknown as [unknown, { signal: AbortSignal }])[1].signal;
+    expect(sent.aborted).toBe(false);
+    caller.abort();
+    expect(sent.aborted).toBe(true);
     expect(create).toHaveBeenCalledWith(
       {
         model: MODEL,
@@ -55,7 +72,7 @@ describe("createAnthropicClient", () => {
         thinking: { type: "adaptive" },
         output_config: { effort: "low", format: { type: "json_schema", schema: request.schema } },
       },
-      { signal },
+      { signal: expect.any(AbortSignal) },
     );
   });
 
@@ -101,6 +118,29 @@ describe("createAnthropicClient", () => {
         reason: "unavailable",
       });
     }
+  });
+
+  it("aborts a call that runs past the timeout and reports it as timeout", async () => {
+    const create = hangingCreate();
+    const client = clientWith(create, 20);
+    expect(await client.generateStructured(request)).toEqual({ ok: false, reason: "timeout" });
+    expect(create.mock.calls[0]?.[1].signal.aborted).toBe(true);
+  });
+
+  it("applies the timeout when the caller sends no signal of its own", async () => {
+    const client = clientWith(hangingCreate(), 20);
+    expect(await client.generateStructured({ ...request, signal: undefined })).toEqual({
+      ok: false,
+      reason: "timeout",
+    });
+  });
+
+  it("reports a caller abort as unavailable, not timeout", async () => {
+    const client = clientWith(hangingCreate());
+    const caller = new AbortController();
+    const result = client.generateStructured({ ...request, signal: caller.signal });
+    caller.abort();
+    expect(await result).toEqual({ ok: false, reason: "unavailable" });
   });
 
   it("rethrows errors that are not from the SDK", async () => {

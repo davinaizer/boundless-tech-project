@@ -15,6 +15,14 @@ const schema = z
     // The mock by default, so the app, CI and e2e run without a key (ADR-007).
     AI_PROVIDER: z.preprocess(unsetIfEmpty, z.enum(["anthropic", "mock"]).default("mock")),
     ANTHROPIC_API_KEY: z.preprocess(unsetIfEmpty, z.string().min(1).optional()),
+    // Abort a model call after this many milliseconds. 8000 is a heuristic (one
+    // live check took 2 to 3 s), to be tuned from logged latency. Capped at 60 s:
+    // longer is no use to an interactive request, and Node turns a timer above
+    // 2^31 - 1 ms into 1 ms, which would time out every call.
+    AI_TIMEOUT_MS: z.preprocess(
+      unsetIfEmpty,
+      z.coerce.number().int().positive().max(60_000).default(8000),
+    ),
   })
   .refine((value) => value.AI_PROVIDER !== "anthropic" || value.ANTHROPIC_API_KEY !== undefined, {
     message: "ANTHROPIC_API_KEY is required when AI_PROVIDER is anthropic",
@@ -32,4 +40,5 @@ export const env = parseEnv({
   DATABASE_URL: process.env.DATABASE_URL,
   AI_PROVIDER: process.env.AI_PROVIDER,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  AI_TIMEOUT_MS: process.env.AI_TIMEOUT_MS,
 });
