@@ -92,8 +92,8 @@ Eval-only: nothing in the runtime or the routes depends on these. Done before Ph
 
 ## Phase 5: Documentation and demo (1h)
 
-- [ ] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements)
-- [ ] "Context and assumptions" and "what I would do at the company" in the README
+- [x] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements). Done 2026-10-15 together with the next item; setup commands run in a clean clone (in-memory with the mock, and migrate and seed on a fresh Postgres database); the recorded-demo marker stays until the demo exists
+- [x] "Context and assumptions" and "what I would do at the company" in the README
 - [ ] Record the demo (Loom or similar) from the local run, with the real model; this is the guaranteed deliverable
 - [ ] Check ADRs, architecture and the roadmap are current
 
