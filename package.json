@@ -15,7 +15,8 @@
     "db:up": "podman compose up -d --wait",
     "db:down": "podman compose down",
     "db:migrate": "node-pg-migrate up -m db/migrations -j sql",
-    "test:integration": "pnpm db:migrate && vitest run -c vitest.integration.config.mts"
+    "db:seed": "tsx --conditions=react-server scripts/seed.ts",
+    "test:integration": "vitest run -c vitest.integration.config.mts"
   },
   "dependencies": {
     "next": "16.4.1",
@@ -35,6 +36,7 @@
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
     "tailwindcss": "^4",
+    "tsx": "4.23.15",
     "typescript": "^5",
     "vitest": "5.0.4"
   },

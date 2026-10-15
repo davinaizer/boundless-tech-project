@@ -125,10 +125,10 @@ src/
   data/                sample catalogue, in-memory and Postgres adapters
   services/            findOffers; interpretQuery and explainResults planned
   components/          planned
-db/migrations/ scripts/        SQL migrations (built) and the seed script (planned)
+db/migrations/ scripts/        SQL migrations and the seed script
 e2e/ evals/                    Playwright specs, model eval (planned)
 .github/workflows/ci.yml       check and build
-compose.yaml, .env.example     local Postgres (Podman or Docker), dev-only values
+compose.yaml, .env.example     local Postgres for dev and integration tests (Podman or Docker), dev-only values
 .agents/skills/                task workflow skills (.claude/skills links here)
 package.json and tool configs  Next.js, TypeScript, Vitest, Oxlint, Oxfmt
 ```

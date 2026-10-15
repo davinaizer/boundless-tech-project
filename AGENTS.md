@@ -60,7 +60,7 @@ Once the project is scaffolded, run before handoff:
 ```sh
 pnpm check   # typecheck, lint, format check, unit tests
 pnpm e2e     # Playwright happy paths, mock AI provider
-pnpm test:integration   # contract tests against local Postgres (start it with pnpm db:up, Podman; export DATABASE_URL from .env.example first)
+pnpm test:integration   # contract tests against the test database (start it with pnpm db:up, Podman)
 ```
 
 The app also runs without a database: leave `DATABASE_URL` unset to use the in-memory adapter ([ADR-010](docs/adr/010-postgres-data-layer.md)).
