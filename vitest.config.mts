@@ -22,7 +22,7 @@ export default defineConfig({
       ANTHROPIC_API_KEY: "",
       AI_TIMEOUT_MS: "",
     },
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "evals/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],
     passWithNoTests: true,
   },

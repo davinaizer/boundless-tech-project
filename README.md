@@ -32,7 +32,7 @@ The model **translates and explains; it never supplies facts** ([ADR-002](docs/a
 
 If the model output is invalid, the app retries once and then falls back to keyword search. Empty input makes no model call.
 
-**Model.** Claude Haiku 5.5, chosen on verified price and native structured-output support, not on a head-to-head quality benchmark ([ADR-005](docs/adr/005-llm-provider.md)). A small evaluation set will check parse accuracy.
+**Model.** Claude Haiku 5.5, chosen on verified price and native structured-output support, not on a head-to-head quality benchmark ([ADR-005](docs/adr/005-llm-provider.md)). A small evaluation set checks parse accuracy; recorded runs are in [docs/eval-results.md](docs/eval-results.md).
 
 ## Tech stack
 
@@ -126,7 +126,8 @@ src/
   services/            findOffers; interpretQuery and explainResults planned
   components/          planned
 db/migrations/ scripts/        SQL migrations and the seed script
-e2e/ evals/                    Playwright specs, model eval (planned)
+evals/                         model eval cases, scorer and runner (`pnpm eval`)
+e2e/                           Playwright specs (planned)
 .github/workflows/ci.yml       check and build; integration (Postgres service)
 compose.yaml, .env.example     local Postgres for dev and integration tests (Podman or Docker), dev-only values
 .agents/skills/                task workflow skills (.claude/skills links here)

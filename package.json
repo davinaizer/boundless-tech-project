@@ -16,7 +16,8 @@
     "db:down": "podman compose down",
     "db:migrate": "node-pg-migrate up -m db/migrations -j sql",
     "db:seed": "tsx --conditions=react-server scripts/seed.ts",
-    "test:integration": "vitest run -c vitest.integration.config.mts"
+    "test:integration": "vitest run -c vitest.integration.config.mts",
+    "eval": "NEXT_PUBLIC_APP_VERSION=eval AI_PROVIDER=anthropic tsx --conditions=react-server --env-file-if-exists=.env.local evals/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",

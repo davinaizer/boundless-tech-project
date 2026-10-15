@@ -16,6 +16,7 @@ A small full-stack AI app (a natural-language benefits finder) built as a techni
 | Scope tiers, below-the-line items, scalability | [docs/roadmap.md](docs/roadmap.md) |
 | Visual theme and mockups | [DESIGN.md](DESIGN.md), [docs/design/](docs/design/) |
 | Evidence behind decisions | [docs/research/](docs/research/) |
+| Eval results, one section per recorded run | [docs/eval-results.md](docs/eval-results.md) |
 | Work plan, phases, acceptance criteria | [docs/TODO.md](docs/TODO.md) |
 | Task workflow skills | [.agents/skills/](.agents/skills/) |
 
