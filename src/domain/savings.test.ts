@@ -94,3 +94,29 @@ describe("estimateSavings", () => {
     expect(SavingsEstimate.parse(estimateSavings(mockup))).toEqual(estimateSavings(mockup));
   });
 });
+
+describe("SavingsEstimate", () => {
+  const valid = estimateSavings([offer("a", { typicalSavingPerUse: 2 })]);
+  const withTier = (changes: Record<string, unknown>) => ({
+    ...valid,
+    tiers: [{ ...valid.tiers[0], ...changes }, valid.tiers[1]],
+  });
+
+  it("rejects fractional pence", () => {
+    expect(SavingsEstimate.safeParse(withTier({ marginPence: -4299.5 })).success).toBe(false);
+    expect(SavingsEstimate.safeParse({ ...valid, bestAnnualSavingPence: 200.1 }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects a negative fee or usable total, while allowing a negative margin", () => {
+    expect(SavingsEstimate.safeParse(withTier({ feePence: -1 })).success).toBe(false);
+    expect(SavingsEstimate.safeParse(withTier({ usableSavingPence: -1 })).success).toBe(false);
+    expect(SavingsEstimate.safeParse(withTier({ marginPence: -4300 })).success).toBe(true);
+  });
+
+  it("rejects an unknown tier and unknown keys", () => {
+    expect(SavingsEstimate.safeParse(withTier({ tier: "gold" })).success).toBe(false);
+    expect(SavingsEstimate.safeParse({ ...valid, total: 1 }).success).toBe(false);
+  });
+});
