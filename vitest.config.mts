@@ -12,7 +12,9 @@ export default defineConfig({
   },
   test: {
     // env.ts parses at import time; tests get a fixed value instead of the build-time one.
-    env: { NEXT_PUBLIC_APP_VERSION: "v0.0.0+test" },
+    // DATABASE_URL is blanked (env.ts reads "" as unset) so a URL exported in the
+    // shell cannot move unit tests onto Postgres; the integration config sets it.
+    env: { NEXT_PUBLIC_APP_VERSION: "v0.0.0+test", DATABASE_URL: "" },
     include: ["src/**/*.test.ts"],
     exclude: ["src/**/*.integration.test.ts"],
     passWithNoTests: true,

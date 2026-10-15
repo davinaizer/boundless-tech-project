@@ -12,6 +12,10 @@ describe("getSearchOffers", () => {
     }
   });
 
+  it("returns one adapter for the process", () => {
+    expect(getSearchOffers()).toBe(getSearchOffers());
+  });
+
   it("looks offers up by id from the same catalogue", async () => {
     const [first] = SAMPLE_OFFERS;
     expect(await getSearchOffers().getByIds([first!.id])).toEqual([first]);

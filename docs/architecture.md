@@ -154,7 +154,7 @@ Conventions inside `src/`, from ADR-009: components are `PascalCase.tsx`, all ot
 
 Proposals:
 - Unit tests sit beside the code as `*.test.ts`. Integration tests sit beside it as `*.integration.test.ts` and run with `pnpm test:integration`, against their own database: the `postgres-test` Compose service (port 5433, in-memory storage), so they never touch the dev data that `pnpm db:seed` loads. The Vitest global setup migrates it first; `TEST_DATABASE_URL` overrides its URL (for CI). The contract test suite for the port lives with the port in `src/domain` and is imported by each adapter's integration test.
-- `src/data` holds the sample catalogue module, one file per adapter, and a single `index.ts` that returns the adapter for the current environment. Nothing else chooses an adapter.
+- `src/data` holds the sample catalogue module, one file per adapter, and a single `index.ts` that returns the adapter for the current environment: Postgres when `DATABASE_URL` is set, in-memory otherwise. It is built on first use and reused, so a server process holds one connection pool (with an `error` listener, so a failed idle connection cannot crash the process). Nothing else chooses an adapter. Unit tests blank `DATABASE_URL`, so they always use the in-memory adapter.
 - The Tailwind theme mirrors the tokens in [DESIGN.md](../DESIGN.md).
 
 Decided in Phase 1:
