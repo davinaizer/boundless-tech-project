@@ -122,10 +122,10 @@ src/
   app/                 pages and Route Handlers (health endpoint exists)
   domain/              types, Zod schemas, SearchOffers port
   lib/                 env.ts, version.ts; ai/ and log.ts planned
-  data/                sample catalogue, in-memory adapter; Postgres adapter planned
+  data/                sample catalogue, in-memory and Postgres adapters
   services/            findOffers; interpretQuery and explainResults planned
   components/          planned
-db/migrations/ scripts/        SQL migrations, migrate and seed scripts (planned)
+db/migrations/ scripts/        SQL migrations (built) and the seed script (planned)
 e2e/ evals/                    Playwright specs, model eval (planned)
 .github/workflows/ci.yml       check and build
 compose.yaml, .env.example     local Postgres (Podman or Docker), dev-only values

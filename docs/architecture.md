@@ -121,11 +121,11 @@ Target layout. Folders are created when they get content ([ADR-009](adr/009-next
 boundless-tech-test/
 |-- .agents/skills/              task workflow skills (exists); .claude/skills links here
 |-- .github/workflows/ci.yml     typecheck, lint, unit, e2e, integration (Postgres service)
-|-- db/migrations/               plain SQL migrations (tool chosen with the Postgres adapter)
+|-- db/migrations/               plain SQL migrations, applied by node-pg-migrate
 |-- docs/                        brief, adr, research, design, architecture, roadmap, TODO (exists)
 |-- e2e/                         Playwright: two happy-path specs (proposal)
 |-- evals/                       cases and run script, on demand, real model (proposal)
-|-- scripts/                     migrate and seed scripts, run with tsx
+|-- scripts/                     seed script, run with tsx
 |-- src/
 |   |-- app/                     routes and Route Handlers only
 |   |   |-- layout.tsx, page.tsx, globals.css
@@ -159,7 +159,7 @@ Proposals:
 
 Decided in Phase 1:
 - `scripts/` run outside Next.js with `tsx --conditions=react-server`, set in their `pnpm` scripts. `tsx` resolves the `@/` paths from `tsconfig.json`, and the `react-server` condition makes `server-only` resolve to its empty module, which is the mechanism that package provides. So the seed script imports the sample catalogue from `src/data` unchanged, and ADR-009 rule 5 holds. Rejected: removing `server-only` from the catalogue (breaks rule 5), a custom loader alias like the Vitest stub (more code for the same result), and running the seed through Vitest (misuses the test runner). The condition applies to the whole script process, so any package with a `react-server` export would load its server build; scripts import no React, so this is accepted. Scripts are developer-run code, and bypassing the guard there is deliberate. Scripts do not import `src/lib/env.ts` (it requires the build-time version); each parses its own `DATABASE_URL` with Zod. `tsx` is added as a pinned dev dependency with the first script.
-- Migrations are plain SQL files in `db/migrations/`. The migration tool chosen with the Postgres adapter must read SQL files from a configurable directory.
+- Migrations are plain SQL files in `db/migrations/`, applied by `node-pg-migrate` (`pnpm db:migrate`, its own CLI, which reads `DATABASE_URL` from the shell). The driver is `pg` (node-postgres). Chosen in the Phase 1 Postgres plan (2026-10-15): node-pg-migrate reads SQL from a configurable directory and tracks applied migrations with a lock. Rejected: `postgres` (postgres.js), whose migration tool wants a folder per migration; `dbmate`, a downloaded binary; a hand-written runner, which would own tracking and locking; and `@neondatabase/serverless`, which speaks HTTP and needs a proxy for local Postgres. `@netlify/database` depends on `pg`, which suggests `pg` fits the hosted option; not verified until the optional deploy.
 
 ## Contracts
 
