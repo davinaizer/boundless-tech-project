@@ -45,6 +45,16 @@ describe("api client", () => {
     expect(await codeOf(interpretRequest("spa", signal))).toBe("payload_too_large");
   });
 
+  it("maps a rate-limited answer to its code", async () => {
+    stubFetch(async () =>
+      Response.json(
+        { error: { code: "rate_limited", message: "slow down", requestId: "r2" } },
+        { status: 429, headers: { "retry-after": "30" } },
+      ),
+    );
+    expect(await codeOf(interpretRequest("spa", signal))).toBe("rate_limited");
+  });
+
   it("reports an unreadable error or success body as bad_response", async () => {
     stubFetch(async () => new Response("<html>", { status: 502 }));
     expect(await codeOf(interpretRequest("spa", signal))).toBe("bad_response");
@@ -68,6 +78,7 @@ describe("api client", () => {
       "invalid_request",
       "unsupported_media_type",
       "payload_too_large",
+      "rate_limited",
       "internal_error",
       "network",
       "bad_response",

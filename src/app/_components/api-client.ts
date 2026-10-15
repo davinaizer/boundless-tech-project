@@ -21,6 +21,7 @@ const MESSAGES: Record<ClientErrorCode, string> = {
   invalid_request: "That request could not be used. Try shorter wording.",
   unsupported_media_type: "Something went wrong sending the request. Please try again.",
   payload_too_large: "That request is too long. Try shorter wording.",
+  rate_limited: "Too many requests. Please wait a minute and try again.",
   internal_error: "Something went wrong on our side. Please try again.",
   network: "We could not reach the server. Check your connection and try again.",
   bad_response: "We got an answer we could not read. Please try again.",

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Offer } from "./offer";
-import { MEMBERSHIP_FEES_PENCE, SavingsEstimate, estimateSavings } from "./savings";
+import {
+  MEMBERSHIP_FEES_PENCE,
+  SAVINGS_BASIS_COUNT,
+  SavingsEstimate,
+  estimateSavings,
+} from "./savings";
 
 const offer = (id: string, overrides: Partial<Offer> = {}): Offer => ({
   id,
@@ -44,10 +49,58 @@ describe("estimateSavings", () => {
   it("totals what each tier can use against its fee", () => {
     const estimate = estimateSavings(mockup);
     expect(estimate.tiers).toEqual([
-      { tier: "standard", feePence: 4500, usableSavingPence: 5100, marginPence: 600 },
-      { tier: "plus", feePence: 7800, usableSavingPence: 8300, marginPence: 500 },
+      {
+        tier: "standard",
+        feePence: 4500,
+        usableOffers: 2,
+        usableSavingPence: 5100,
+        marginPence: 600,
+      },
+      { tier: "plus", feePence: 7800, usableOffers: 3, usableSavingPence: 8300, marginPence: 500 },
     ]);
     expect(estimate.bestAnnualSavingPence).toBe(8300);
+    expect(estimate.countedOffers).toBe(3);
+  });
+
+  describe("the basis", () => {
+    // Ranked best first: only the first three feed the totals.
+    const ranked = [
+      offer("a", { typicalSavingPerUse: 10, assumedUsesPerYear: 1 }),
+      offer("b", { typicalSavingPerUse: 20, assumedUsesPerYear: 1 }),
+      offer("c", { tier: "plus", typicalSavingPerUse: 30, assumedUsesPerYear: 1 }),
+      offer("d", { typicalSavingPerUse: 400, assumedUsesPerYear: 10 }),
+      offer("e", { tier: "plus", typicalSavingPerUse: 500, assumedUsesPerYear: 10 }),
+    ];
+
+    it("counts only the first few offers in the totals and the badge", () => {
+      const estimate = estimateSavings(ranked);
+      expect(SAVINGS_BASIS_COUNT).toBe(3);
+      expect(estimate.countedOffers).toBe(3);
+      expect(tier(estimate, "standard")).toMatchObject({
+        usableOffers: 2,
+        usableSavingPence: 3000,
+      });
+      expect(tier(estimate, "plus")).toMatchObject({ usableOffers: 3, usableSavingPence: 6000 });
+      expect(estimate.bestAnnualSavingPence).toBe(6000);
+    });
+
+    it("still gives every offer its own line, for the per-use tags on the cards", () => {
+      const estimate = estimateSavings(ranked);
+      expect(estimate.offers.map((o) => o.offerId)).toEqual(["a", "b", "c", "d", "e"]);
+      expect(estimate.offers[4]!.annualSavingPence).toBe(500000);
+    });
+
+    it("counts every offer when there are fewer than the basis", () => {
+      const estimate = estimateSavings(ranked.slice(0, 2));
+      expect(estimate.countedOffers).toBe(2);
+      expect(tier(estimate, "plus").usableSavingPence).toBe(3000);
+    });
+
+    it("takes the basis as a parameter", () => {
+      const estimate = estimateSavings(ranked, 1);
+      expect(estimate.countedOffers).toBe(1);
+      expect(estimate.bestAnnualSavingPence).toBe(1000);
+    });
   });
 
   it("counts a Plus-only offer for Plus and not for Standard", () => {
@@ -67,6 +120,7 @@ describe("estimateSavings", () => {
   it("returns zero totals for an empty list", () => {
     const estimate = estimateSavings([]);
     expect(estimate.offers).toEqual([]);
+    expect(estimate.countedOffers).toBe(0);
     expect(estimate.tiers.map((t) => [t.usableSavingPence, t.marginPence])).toEqual([
       [0, -4500],
       [0, -7800],
