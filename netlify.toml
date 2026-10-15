@@ -1,0 +1,6 @@
+# Netlify secrets scanning checks build output and repo files for the values of
+# the site's environment variables. These keys hold non-secret config (for
+# example AI_PROVIDER=anthropic, a word that also appears throughout the code),
+# so omit them. ANTHROPIC_API_KEY and DATABASE_URL stay scanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "AI_PROVIDER,AI_TIMEOUT_MS,MAX_QUERY_CHARS,MAX_BODY_BYTES,NEXT_PUBLIC_APP_VERSION"
