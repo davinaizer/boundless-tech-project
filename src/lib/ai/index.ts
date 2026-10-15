@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/lib/env";
+import { cannedResponder } from "./canned";
 import { createAnthropicClient, createAnthropicSdk } from "./client";
 import { createMockAiClient } from "./mock";
 import type { AiClient } from "./types";
@@ -13,7 +14,7 @@ export type {
 } from "./types";
 
 function createAiClient(): AiClient {
-  if (env.AI_PROVIDER === "mock") return createMockAiClient();
+  if (env.AI_PROVIDER === "mock") return createMockAiClient(cannedResponder);
   // env.ts already rejects this combination; the check narrows the type.
   if (env.ANTHROPIC_API_KEY === undefined) throw new Error("ANTHROPIC_API_KEY is not set");
   return createAnthropicClient(createAnthropicSdk(env.ANTHROPIC_API_KEY).messages, {

@@ -9,7 +9,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) Phase 2 (AI client and mock, `interpretQuery`, `explainResults`, eval) and Phase 3 (Route Handlers, finder UI, filters in the URL, request log line) done; Phase 4 (e2e) next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) Phase 2 (AI client and mock, `interpretQuery`, `explainResults`, eval) and Phase 3 (Route Handlers, finder UI, filters in the URL, request log line) done; Phase 4 (e2e specs, `pnpm e2e` and the CI job built; CI job not yet run) checkpoint next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
 | Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 This README describes the intended design. Sections marked *pending* are completed once the code exists.
@@ -130,7 +130,7 @@ src/
   components/          planned
 db/migrations/ scripts/        SQL migrations and the seed script
 evals/                         model eval cases, scorer and runner (`pnpm eval`)
-e2e/                           Playwright specs (planned)
+e2e/                           Playwright specs (two happy paths)
 .github/workflows/ci.yml       check and build; integration (Postgres service)
 compose.yaml, .env.example     local Postgres for dev and integration tests (Podman or Docker), dev-only values
 .agents/skills/                task workflow skills (.claude/skills links here)

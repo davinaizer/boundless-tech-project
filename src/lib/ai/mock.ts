@@ -8,7 +8,7 @@ export type MockResponder = (
 export type MockAiClient = AiClient & { readonly calls: StructuredRequest[] };
 
 // With no responder the mock answers like an unreachable model, so the services
-// take their fallback path. Canned answers for e2e are added with each service.
+// take their fallback path. The e2e answers are in canned.ts, passed in by index.ts.
 const unavailable: MockResponder = () => ({ ok: false, reason: "unavailable" });
 
 export function createMockAiClient(responder: MockResponder = unavailable): MockAiClient {

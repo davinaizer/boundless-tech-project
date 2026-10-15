@@ -17,6 +17,7 @@
     "db:migrate": "node-pg-migrate up -m db/migrations -j sql",
     "db:seed": "tsx --conditions=react-server scripts/seed.ts",
     "test:integration": "vitest run -c vitest.integration.config.mts",
+    "e2e": "playwright test",
     "eval": "NEXT_PUBLIC_APP_VERSION=eval AI_PROVIDER=anthropic tsx --conditions=react-server --env-file-if-exists=.env.local evals/run.ts"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
     "@types/pg": "8.23.1",

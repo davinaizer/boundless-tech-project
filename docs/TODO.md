@@ -75,7 +75,7 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 ## Phase 4: e2e (0h40)
 
-- [ ] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path
+- [x] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path. Built 2026-10-15 with `@playwright/test@1.64.1`: `playwright.config.ts` (Chromium, port 3100, build and start, mock provider and in-memory adapter set in the config), `e2e/search.spec.ts` and `e2e/edit-chip.spec.ts`; the mock provider gained canned answers for one exact query (`src/lib/ai/canned.ts`, 4 unit tests through the real services). 236 unit tests and 2 e2e tests green locally, including a run with `AI_PROVIDER=anthropic`, a bogus key and an unreachable `DATABASE_URL` in the shell. Not yet run: the `e2e` job in `ci.yml` (needs a push). The specs assert properties, not counts, since offers expire against the real date
 - [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
