@@ -29,3 +29,4 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [011](011-local-first-delivery.md) | Local-first delivery, Podman, deployment at a gate | Accepted |
 | [012](012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting | Accepted |
 | [013](013-ai-generated-sample-data.md) | AI-generated fictional sample data | Accepted |
+| [014](014-filters-in-the-url.md) | Filters in the URL, read on the client | Accepted |

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Filters } from "@/domain/filters";
 import type { Offer } from "@/domain/offer";
 import type { SavingsEstimate } from "@/domain/savings";
@@ -14,6 +14,7 @@ import {
   type ClientErrorCode,
 } from "./api-client";
 import { ChipList } from "./ChipList";
+import { filtersFromSearch, filtersToSearch } from "./filters-url";
 import { FeePanel } from "./FeePanel";
 import { createLatest } from "./latest";
 import { OfferCard } from "./OfferCard";
@@ -21,10 +22,13 @@ import { OfferCard } from "./OfferCard";
 // Cards shown, and the offers explained: the explain endpoint takes at most ten.
 const MAX_SHOWN = 10;
 
+// "url": the filters came from the link, not from a model reading.
+type Source = "llm" | "fallback" | "url";
+
 type Ready = {
   phase: "ready";
   filters: Filters;
-  source: "llm" | "fallback";
+  source: Source;
   offers: Offer[];
   savings: SavingsEstimate;
   // null while /api/explain is pending; {} when no lines could be had.
@@ -37,6 +41,13 @@ type State =
   | { phase: "loading" }
   | { phase: "error"; code: ClientErrorCode }
   | Ready;
+
+const SOURCE_NOTES: Record<Source, string> = {
+  llm: "Read by AI. Change any filter and the results update straight away.",
+  fallback:
+    "We could not read your request with AI, so we used its keywords. Add or change filters to refine.",
+  url: "Filters from the link. Change any filter and the results update straight away.",
+};
 
 function statusText(state: State): string {
   switch (state.phase) {
@@ -64,9 +75,10 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
 
   type Request = ReturnType<ReturnType<typeof createLatest>["begin"]>;
 
-  async function searchAndExplain(filters: Filters, source: "llm" | "fallback", req: Request) {
+  async function searchAndExplain(filters: Filters, source: Source, req: Request, push = true) {
     const found = await searchRequest(filters, req.signal);
     if (!req.isCurrent()) return;
+    if (push) writeUrl(filters);
     setState({
       phase: "ready",
       filters,
@@ -90,6 +102,36 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
     setState((current) => (current.phase === "ready" ? { ...current, lines } : current));
   }
 
+  // The URL holds the filters only, never the user's words. A new entry per
+  // change, so Back steps through them; none when the URL already says so.
+  function writeUrl(filters: Filters) {
+    const search = filtersToSearch(filters);
+    const next = search === "" ? window.location.pathname : `?${search}`;
+    const current = window.location.search || window.location.pathname;
+    if (next !== current) window.history.pushState(null, "", next);
+  }
+
+  // Loads what the address bar says: the first visit with a link, and Back or
+  // Forward. No interpret call and no model reading, so the source is "url".
+  function loadFromUrl() {
+    const filters = filtersFromSearch(window.location.search);
+    const req = latest.current.begin();
+    if (filters === null) {
+      setState({ phase: "idle" });
+      return;
+    }
+    lastAction.current = loadFromUrl;
+    setState({ phase: "loading" });
+    searchAndExplain(filters, "url", req, false).catch((error: unknown) => fail(error, req));
+  }
+
+  useEffect(() => {
+    if (filtersFromSearch(window.location.search) !== null) loadFromUrl();
+    window.addEventListener("popstate", loadFromUrl);
+    return () => window.removeEventListener("popstate", loadFromUrl);
+    // Mount only: loadFromUrl reads the address bar, not component state.
+  }, []);
+
   function fail(error: unknown, req: Request) {
     if (!req.isCurrent() || isAbort(error)) return;
     setState({
@@ -112,7 +154,7 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
   function edit(next: Filters) {
     const req = latest.current.begin();
     lastAction.current = () => edit(next);
-    const source = state.phase === "ready" ? state.source : "llm";
+    const source: Source = state.phase === "ready" ? state.source : "llm";
     setState((current) =>
       current.phase === "ready"
         ? { ...current, filters: next, refreshing: true, lines: null }
@@ -179,11 +221,7 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
           {ready && (
             <div className="mt-5">
               <ChipList filters={ready.filters} onChange={edit} disabled={ready.refreshing} />
-              <p className="mt-3 text-base text-muted">
-                {ready.source === "llm"
-                  ? "Read by AI. Change any filter and the results update straight away."
-                  : "We could not read your request with AI, so we used its keywords. Add or change filters to refine."}
-              </p>
+              <p className="mt-3 text-base text-muted">{SOURCE_NOTES[ready.source]}</p>
             </div>
           )}
         </div>

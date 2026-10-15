@@ -18,8 +18,6 @@ function appVersion(): string {
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: appVersion() },
-  cacheComponents: true,
-  partialPrefetching: true,
   // AGENTS.md is owned by this repository; stop `next dev` from rewriting it.
   agentRules: false,
   turbopack: {
