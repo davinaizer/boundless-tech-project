@@ -56,7 +56,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 
 **Ten minutes**
 - [Decision records](docs/adr/README.md): one file per decision, each with options, consequences and its weakest assumption
-- [Research](docs/research/): company profile, competitor scan, observed technology stack, search usage. Each states its sources and limits.
+- [Research](docs/research/): company profile, competitor scan, observed technology stack, search usage, Next.js practices. Each states its sources and limits.
 
 **For the engineering approach**
 - [AGENTS.md](AGENTS.md): working rules, delegation levels for AI-assisted work, conventions
@@ -78,6 +78,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit |
 | [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e paths, on-demand eval |
 | [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
+| [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |
 
 ## Evidence and assumptions
 

@@ -12,6 +12,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] App version string `v<package>+<build>.<short sha>` computed at build time; settle the build-number source and Netlify commit variable in the spike
 - [ ] Deploy spike: minimal route handler on Netlify; check function time limits and that the build detects pnpm. If unacceptable, use Vercel and record the reason in ADR-003's follow-up
 - [ ] `.gitignore` cleaned for this stack
+- [ ] ESLint `no-restricted-imports` boundaries and `server-only` handling in the Vitest setup ([ADR-009](adr/009-nextjs-conventions.md))
 
 **Done when:** CI is green on an empty app and the spike URL responds.
 
@@ -27,6 +28,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 ## Phase 2: AI layer (2h)
 
+- [ ] `src/lib/env.ts`: Zod-parsed environment, the only reader of `process.env`
 - [ ] `lib/ai` client for Claude Haiku 5.5 with structured output; mock provider
 - [ ] `PROMPT_VERSION` constant, recorded in eval output
 - [ ] `interpretQuery` with Zod re-validation, one retry, keyword fallback, no call on empty input
@@ -41,7 +43,8 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] Route Handlers: interpret, search, explain
 - [ ] UI: query box, editable chips, results, savings, loading, empty and error states
 - [ ] Accessibility basics: labels, focus order, contrast, keyboard use of chips
-- [ ] Filters serialised into the URL query string
+- [ ] Filters serialised into the URL query string; decide server or client reading (server `searchParams` makes the route dynamic) and record it in ADR-009 follow-up
+- [ ] `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`
 - [ ] Input cap and best-effort rate limit
 - [ ] One structured JSON log line per request (no query text); version shown in the UI footer
 
@@ -84,4 +87,4 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | 4 | 0.5h | |
 | 5 | 1h | |
 
-Planned total is about 8h45. The first plan was 8h; the roadmap additions (health, version string, logging, prompt version) added about 45 minutes, which is estimated, not measured. Slides are outside this total.
+Planned total is about 8h45. The first plan was 8h; the roadmap additions (health, version string, logging, prompt version) added about 45 minutes, which is estimated, not measured. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).

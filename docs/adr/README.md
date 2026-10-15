@@ -24,3 +24,4 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [006](006-demo-protection.md) | Public demo protection | Accepted |
 | [007](007-test-strategy.md) | Test strategy | Accepted |
 | [008](008-design-direction.md) | Design direction | Accepted |
+| [009](009-nextjs-conventions.md) | Next.js structure and conventions | Accepted |

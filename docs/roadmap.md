@@ -85,6 +85,20 @@ No load data exists. The items below are hypotheses about where limits would app
 | Filters beyond category, expiry and tier | Only those are evidenced in the production index | Index inspection | Index enrichment, or handle as free-text query |
 | Parse accuracy on real queries | Eval is a hand-written regression check | Logged fallback and chip-edit rates | Larger eval set; prompt changes tracked by `PROMPT_VERSION` |
 
+### Next.js hardening if this became a production service
+
+Not built. Source for each: official Next.js docs, summarised in [nextjs-practices](research/nextjs-practices.md). On Netlify, skew protection is opt-in through an environment variable and the cache is platform-managed ([research](research/nextjs-practices.md#netlify-support-checked-2026-10-15)); the other items were not mapped to Netlify.
+
+| Item | Revisit when |
+|---|---|
+| Content Security Policy | Before any public launch beyond the demo |
+| Formal Data Access Layer with a DTO per query and authorization | User-specific data or authentication is added |
+| Shared cache handler with `refreshTags()`, shared `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `deploymentId` | Self-hosting on more than one instance, or rolling deploys causing stale-client errors |
+| Reverse proxy with streaming buffering disabled, graceful shutdown | Self-hosting the Node server |
+| `instrumentation.ts` and OpenTelemetry | Real traffic and a backend to send to (see Observability) |
+| Taint APIs (experimental) | A DAL exists and sensitive objects flow near Client Components |
+| CODEOWNERS, bundle-size check in CI, monorepo tooling | More than one contributor or deployable |
+
 Other improvements, none built:
 - Check whether the search service's own AI features already cover natural-language queries before extending this layer.
 - Authentication, embeddings, real data and CMS integration remain out of scope ([architecture](architecture.md)).

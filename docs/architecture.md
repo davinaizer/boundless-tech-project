@@ -109,7 +109,7 @@ sequenceDiagram
 | AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK |
 | Data (`src/data`) | Fictional sample catalogue | domain |
 
-Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider.
+Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by ESLint.
 
 ## Contracts
 
