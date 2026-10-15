@@ -9,7 +9,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) and Phase 2 (AI client and mock, `interpretQuery`, `explainResults`, eval) done; Phase 3 (API and UI) next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) Phase 1 (domain, search, Postgres and in-memory data layer, savings estimate) Phase 2 (AI client and mock, `interpretQuery`, `explainResults`, eval) and Phase 3 (Route Handlers, finder UI, filters in the URL, request log line) done; Phase 4 (e2e) next. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
 | Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 This README describes the intended design. Sections marked *pending* are completed once the code exists.
@@ -82,6 +82,9 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |
 | [010](docs/adr/010-postgres-data-layer.md) | Postgres adapter as the default behind the port; in-memory adapter kept for tests and a no-database run |
 | [011](docs/adr/011-local-first-delivery.md) | Local-first; Podman for Postgres; deploy only at a gate after the demo is recorded |
+| [012](docs/adr/012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting |
+| [013](docs/adr/013-ai-generated-sample-data.md) | Fictional sample catalogue generated once, offline, from a committed spec |
+| [014](docs/adr/014-filters-in-the-url.md) | Filters in the URL, read on the client, so the page stays static |
 
 ## Evidence and assumptions
 
@@ -121,7 +124,7 @@ docs/
 src/
   app/                 the finder page, `_components/`, and Route Handlers (`/api/interpret`, `search`, `explain`, `health`)
   domain/              types, Zod schemas, SearchOffers port, estimateSavings
-  lib/                 env.ts, version.ts, ai/ (model client and mock); log.ts planned
+  lib/                 env.ts, version.ts, ai/ (model client and mock), log.ts
   data/                sample catalogue, in-memory and Postgres adapters
   services/            findOffers, interpretQuery, explainResults
   components/          planned
