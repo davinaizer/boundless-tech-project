@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { createMockAiClient, type MockAiClient, type MockResponder } from "@/lib/ai/mock";
 
 // The routes get the mock client built here, so each test scripts its own answers.
@@ -10,7 +10,14 @@ import { POST as explain } from "./explain/route";
 import { POST as interpret } from "./interpret/route";
 import { POST as search } from "./search/route";
 
+let logSpy: MockInstance<typeof console.log>;
+const logLines = () =>
+  logSpy.mock.calls.map((call) => JSON.parse(String(call[0])) as Record<string, unknown>);
+
+afterEach(() => vi.restoreAllMocks());
+
 beforeEach(() => {
+  logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   responder = undefined;
   ai = createMockAiClient((request) =>
     responder ? responder(request) : { ok: false, reason: "unavailable" },
@@ -203,5 +210,93 @@ describe("POST /api/explain", () => {
     const many = Array.from({ length: 11 }, (_, i) => `offer-${String(i + 1).padStart(3, "0")}`);
     expect((await explain(post({ filters, offerIds: many }))).status).toBe(400);
     expect((await explain(post({ filters, offerIds: [5] }))).status).toBe(400);
+  });
+});
+
+describe("request log line", () => {
+  const keys = [
+    "event",
+    "requestId",
+    "endpoint",
+    "status",
+    "outcome",
+    "latencyMs",
+    "promptVersion",
+    "appVersion",
+    "modelCalls",
+    "inputTokens",
+    "outputTokens",
+    "estimatedCostUsd",
+  ];
+
+  it("logs one line per request with model calls, tokens and cost", async () => {
+    responder = () => ({ ok: true, data: { categories: ["dining"] }, usage });
+    const response = await interpret(post({ query: "dinner somewhere" }));
+    const lines = logLines();
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({
+      event: "request",
+      endpoint: "interpret",
+      status: 200,
+      outcome: "ok",
+      source: "llm",
+      modelCalls: 1,
+      inputTokens: 10,
+      outputTokens: 5,
+      estimatedCostUsd: 0.0000035,
+      requestId: response.headers.get("x-request-id"),
+    });
+    expect(Object.keys(lines[0]!).sort()).toEqual([...keys, "source"].sort());
+  });
+
+  it("records the failure reason on fallback", async () => {
+    responder = () => ({ ok: false, reason: "timeout" });
+    await interpret(post({ query: "spa" }));
+    expect(logLines()[0]).toMatchObject({
+      source: "fallback",
+      failure: "timeout",
+      modelCalls: 2,
+      outcome: "ok",
+    });
+  });
+
+  it("logs search with no model fields set", async () => {
+    await search(post({ filters: { categories: ["dining"] } }));
+    const line = logLines()[0]!;
+    expect(line).toMatchObject({ endpoint: "search", modelCalls: 0, estimatedCostUsd: 0 });
+    expect(line).not.toHaveProperty("source");
+  });
+
+  it("logs explain with its source", async () => {
+    responder = () => ({ ok: false, reason: "unavailable" });
+    await explain(post({ filters: { categories: ["dining"] }, offerIds: ["offer-001"] }));
+    expect(logLines()[0]).toMatchObject({
+      endpoint: "explain",
+      source: "fallback",
+      failure: "unavailable",
+      modelCalls: 1,
+    });
+  });
+
+  it("logs the outcome of each rejected request", async () => {
+    await interpret(post({ query: 5 }));
+    await interpret(post({ query: "spa" }, { contentType: "text/plain" }));
+    await interpret(post({ query: "a" }, { raw: " ".repeat(5000) }));
+    expect(logLines().map((l) => [l.status, l.outcome])).toEqual([
+      [400, "invalid_request"],
+      [415, "unsupported_media_type"],
+      [413, "payload_too_large"],
+    ]);
+  });
+
+  it("never logs the query text, filter values or an error message", async () => {
+    responder = () => {
+      throw new Error("secret-sentinel connection string");
+    };
+    await interpret(post({ query: "zebra-sentinel dinner" }));
+    await explain(post({ filters: { keywords: ["quokka-sentinel"] }, offerIds: [] }));
+    const text = logSpy.mock.calls.map((call) => String(call[0])).join("\n");
+    expect(text).not.toContain("sentinel");
+    expect(logLines()[0]).toMatchObject({ outcome: "internal_error", errorName: "Error" });
   });
 });

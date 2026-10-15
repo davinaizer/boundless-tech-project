@@ -5,11 +5,12 @@ import { handleJson } from "../_lib/handle-json";
 
 export async function POST(request: Request) {
   return handleJson(request, {
+    endpoint: "search",
     body: SearchRequest,
     result: SearchResponse,
     run: async ({ filters }) => {
       const offers = await findOffers(filters);
-      return { offers, savings: estimateSavings(offers) };
+      return { body: { offers, savings: estimateSavings(offers) } };
     },
   });
 }

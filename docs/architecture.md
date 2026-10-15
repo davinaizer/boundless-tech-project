@@ -143,7 +143,7 @@ boundless-tech-test/
 |   |-- lib/
 |   |   |-- ai/                  the only code that calls the model: client, mock, types, provider selection (server-only)
 |   |   |-- env.ts               the only reader of process.env
-|   |   `-- log.ts               the one-line JSON request log (proposal)
+|   |   `-- log.ts               the one-line JSON request log and the cost estimate
 |   `-- data/                    sample catalogue, adapters, adapter selection (server-only)
 |-- AGENTS.md, DESIGN.md, README.md
 |-- compose.yaml                 local Postgres for dev and integration tests (Podman or Docker)
@@ -246,7 +246,7 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 
 `/api/explain` takes offer IDs, not offer data. The server reloads the offers from the port, so the client cannot inject content into the prompt.
 
-**Operations.** Each request writes one JSON log line: request ID, endpoint, latency, model calls, token counts, fallback used, outcome, and `PROMPT_VERSION`. Query text is never logged. The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`. Scope tiers and trade-offs: [roadmap](roadmap.md).
+**Operations.** Each request writes one JSON log line: event, request ID, endpoint, status, outcome, latency, model calls, token counts, estimated cost in USD, `source`, the failure reason on fallback, the class name of an unexpected error, `PROMPT_VERSION` and the app version. Written by `handleJson` on every exit path, so rejected requests are logged too. The cost is an estimate from the Haiku 5.5 prices in ADR-005 (`src/lib/log.ts`), not billing. Query text, filter values and error messages are never logged. The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`. Scope tiers and trade-offs: [roadmap](roadmap.md).
 
 **Errors and request checks.** Route Handlers reject a wrong content type or an oversized body before parsing (the limit is set in config, a heuristic), then validate with Zod. Every endpoint returns the same error shape for invalid requests and unexpected server errors: `{ error: { code, message, requestId } }` with an HTTP status. Messages are safe to show and carry no internals; `code` comes from a small closed set defined in `src/domain/api.ts`: `invalid_request` (400), `unsupported_media_type` (415), `payload_too_large` (413) and `internal_error` (500). The shared handler shell (`src/app/api/_lib/handle-json.ts`) checks the content type and reads the body with a byte limit (`MAX_BODY_BYTES`, default 4096, a heuristic) before parsing, caps `query` at `MAX_QUERY_CHARS` (default 200, ADR-006) and `offerIds` at 10 (over-long lists are rejected, not truncated), validates the response with Zod, and returns an `x-request-id` header with the same ID. A model failure is not an error response: it triggers the fallback described below, and `/api/interpret` reports `source: "fallback"`.
 
