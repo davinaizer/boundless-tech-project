@@ -75,8 +75,8 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 ## Phase 4: e2e (0h40)
 
-- [ ] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path
-- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
+- [x] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path. Built 2026-10-15 with `@playwright/test@1.64.1`: `playwright.config.ts` (Chromium, port 3100, build and start, mock provider and in-memory adapter set in the config), `e2e/search.spec.ts` and `e2e/edit-chip.spec.ts`; the mock provider gained canned answers for one exact query (`src/lib/ai/canned.ts`, 4 unit tests through the real services). 236 unit tests and 2 e2e tests green locally, including a run with `AI_PROVIDER=anthropic`, a bogus key and an unreachable `DATABASE_URL` in the shell. The `e2e` job in `ci.yml` is green on its first run (reported by the author, 2026-10-15; confirmed with `gh run list` for `20e98d3`: https://github.com/davinaizer/boundless-tech-project/actions/runs/38770942870). The specs assert properties, not counts, since offers expire against the real date
+- [x] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR. Run 2026-10-15: DRIFT, two documentation items, fixed in the docs with no code or ADR change: README layout omitted the `e2e` CI job; Phase 4 time log cell was empty. Not run in the review: `pnpm e2e` and `pnpm test:integration` (CI green for `20e98d3`). Noted, not drift: `canned.ts` is described in the architecture prose but not named in the `lib/ai` tree line; `BUGS.md` reports a price filter of 0 for a "cheap family day out" query, a real-model behaviour the mock e2e cannot catch
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
 
@@ -84,17 +84,18 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 Eval-only: nothing in the runtime or the routes depends on these. Done before Phase 5 so the README can quote the numbers. If time is short, drop the second task first; the deterministic grounding check already guards the explain step.
 
-- [ ] No-LLM baseline in the eval: score `keywordFallback` over `EVAL_CASES` and print a "keywords only" column next to the model's result, so the eval shows what the model adds. Record it in [eval-results](eval-results.md)
-- [ ] Judge-graded eval for `explainResults`: a fixed set of filter and offer inputs, a rubric scored by a judge model (uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer), run on demand with the prompt version recorded. State its limits in `eval-results.md`: one model family grades itself, a small set, and a judge is a signal, not a measure
+- [x] No-LLM baseline in the eval: score `keywordFallback` over `EVAL_CASES` and print a "keywords only" column next to the model's result, so the eval shows what the model adds. Record it in [eval-results](eval-results.md). Built 2026-10-15: `scoreBaseline` in `evals/score.ts` (unit tested), a "Keywords only" column in `pnpm eval`; one run recorded: model 19/20, keywords only 7/20. The set also gained `cheap-family-brighton` (`BUGS.md`), which fails with `maxPricePerPerson: 0`
+- [x] Fix `maxPricePerPerson: 0` for a vague price word ("cheap") found by `cheap-family-brighton` in the eval and `BUGS.md`: decide between a prompt change and a boundary guard under [ADR-002](adr/002-ai-boundary.md), then re-run the eval and record it. Added 2026-10-15 from the eval run. Done 2026-10-15 with a prompt change (prompt `2026-10-15.6`), not a guard: a free price of 0 is valid, and the model had "cheap" and "free" backwards (19/21 before). Added the `free-days-out` case; 21/21 in three runs after. Recorded in [eval-results](eval-results.md)
+- [~] **Dropped 2026-10-15.** Judge-graded eval for `explainResults`: a fixed set of filter and offer inputs, a rubric scored by a judge model (uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer), run on demand with the prompt version recorded. State its limits in `eval-results.md`: one model family grades itself, a small set, and a judge is a signal, not a measure. Reason: the brief asks for quality and clarity, not completeness. The deterministic grounding check already guards what the explain step may say, and a failed line falls back to `describeMatch`, so a bland sentence is a minor failure. A same-family judge grading about 18 lines would be a weak signal and would need its own limits section. The time is better spent on Phase 5. Recorded as a below-the-line item in [roadmap](roadmap.md)
 
-**Done when:** a run is recorded in `eval-results.md` with both additions, or the second task is dropped and the reason recorded.
+**Done when:** a run is recorded in `eval-results.md` with both additions, or the second task is dropped and the reason recorded. Closed 2026-10-15: the baseline is recorded (and the price fix it exposed); the judge eval is dropped, with the reason on its line above.
 
 ## Phase 5: Documentation and demo (1h)
 
-- [ ] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements)
-- [ ] "Context and assumptions" and "what I would do at the company" in the README
+- [x] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements). Done 2026-10-15 together with the next item; setup commands run in a clean clone (in-memory with the mock, and migrate and seed on a fresh Postgres database); the recorded-demo marker stays until the demo exists
+- [x] "Context and assumptions" and "what I would do at the company" in the README
 - [ ] Record the demo (Loom or similar) from the local run, with the real model; this is the guaranteed deliverable
-- [ ] Check ADRs, architecture and the roadmap are current
+- [x] Check ADRs, architecture and the roadmap are current. Done 2026-10-15: checked paths, scripts, links, ADR status lines and counts against the tree; fixed the architecture folder tree and CI line, the roadmap version-string open point, the hours figure and a missing below-the-line row, and the ADR index status column. No accepted ADR was edited and no built behaviour contradicted one
 
 **Done when:** a new reader can set up, run and understand the decisions from the README.
 
@@ -133,7 +134,7 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | 2 | 2h25 | 2h (recorded by the author) |
 | 2.1 | 0h50 | |
 | 3 | 2h05 | 53 min (recorded by the author) |
-| 4 | 0h40 | |
+| 4 | 0h40 | 14 min (recorded by the author) |
 | 4.1 (optional) | 0.75h | |
 | 5 | 1h | |
 | 6 (optional) | 0.75h | |

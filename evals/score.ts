@@ -50,3 +50,16 @@ export function scoreCase(expect: Expect, actual: Filters): Verdict {
 
   return reasons.length === 0 ? { pass: true } : { pass: false, reasons };
 }
+
+// Scores a no-model baseline over the cases: the same scorer, with the filters
+// coming from `interpret` (the keyword fallback in the eval). Fields a keyword
+// match cannot set are reported as failures, which is the point of the baseline.
+export function scoreBaseline(
+  cases: readonly { id: string; query: string; expect: Expect }[],
+  interpret: (query: string) => Filters,
+): { id: string; verdict: Verdict }[] {
+  return cases.map(({ id, query, expect }) => ({
+    id,
+    verdict: scoreCase(expect, interpret(query)),
+  }));
+}

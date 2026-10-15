@@ -1,6 +1,6 @@
 # Eval results
 
-Recorded runs of `pnpm eval` ([ADR-007](adr/007-test-strategy.md)): hand-written queries with expected filters (15 at the first run, 19 since the follow-up), run against the real model, once each unless a section says otherwise. The cases are queries the author thought of, so a pass rate is a regression signal, not a measure of accuracy on real use. Each run is read next to the prompt version that produced it (`PROMPT_VERSION`, [roadmap](roadmap.md)).
+Recorded runs of `pnpm eval` ([ADR-007](adr/007-test-strategy.md)): hand-written queries with expected filters (15 at the first run, 19 after the follow-up, 20 after the Brighton case, 21 since the free case), run against the real model, once each unless a section says otherwise. The cases are queries the author thought of, so a pass rate is a regression signal, not a measure of accuracy on real use. Each run is read next to the prompt version that produced it (`PROMPT_VERSION`, [roadmap](roadmap.md)).
 
 Method: each case passes when every field it names matches and every field it does not name is absent (extra keywords are allowed). "Offers" is how many offers the interpreted filters find with `today` pinned to 2026-10-15. Cases and scorer: `evals/cases.ts`, `evals/score.ts`.
 
@@ -54,3 +54,27 @@ What changed in the prompt: a mood word, a pet or a general question names no ca
 - Unrecorded probe, one run each on `.5`, queries not in the case list: "where can I take my hamster", "a gift for my goldfish" and "fun for my parrot this weekend" all returned no fields. Seven queries, one sample each.
 - One over-correction seen in that probe: "a quiet dinner for me" now gives `dining` with no audience, where "for me" could fairly be read as solo. Under-filling widens results, which was judged safer than inventing a field, but it is a trade-off and not covered by a case.
 - All 19 cases are the author's; three runs per prompt are still a small sample.
+
+## 2026-10-15, prompt `2026-10-15.5`: keywords-only baseline and the Brighton case
+
+Two additions to the runner, no prompt change. The report now scores `keywordFallback` (no model) over the same cases with the same scorer, and the set gained `cheap-family-brighton` from `BUGS.md` (20 cases). One run, one sample per case, `claude-haiku-5-5`.
+
+**Model: 19/20. Keywords only: 7/20.** 19 of 20 interpreted filters found at least one offer. 20895 input and 497 output tokens; slowest case 1577 ms (not a latency measure).
+
+- **Where the model adds value:** all 12 cases that name a category, region, price, audience or tier fail the baseline and pass the model. The baseline cannot set any field but keywords, so this gap is by construction: it shows what the model is for, not how good the keyword match is.
+- **The baseline's 7 passes are the no-invented-fields cases** (`out-of-schema`, `instruction-in-query`, `vague`, `out-of-schema-cat`, `not-an-offer-question`, `mood-surprise-me`, `something-tomorrow`). They pass because extra keywords are allowed and nothing else is set, so they say nothing about understanding the query.
+- **The one model failure is the new case:** `cheap-family-brighton` got `maxPricePerPerson: 0` for "cheap", which finds 0 offers. This reproduces the `BUGS.md` report with the real model. It is recorded as it ran and not fixed here: the fix (a prompt change, a boundary guard, or both) is its own task. The baseline also fails this case, for the missing category, region and audience, not the price.
+- **Limits:** the cases are the author's own, so 20/20 would still not be a measure of accuracy on real queries; the baseline is a floor, not a competitor.
+
+## 2026-10-15, prompt `2026-10-15.6` against `2026-10-15.5`: price words with no amount
+
+Fix for the `cheap-family-brighton` failure above. One sentence was added to the `maxPricePerPerson` line of the interpret prompt: "free" or "no cost" is 0, and a price word with no amount ("cheap", "affordable", "budget") names no number, so the field is left out. A counterpart case, `free-days-out` ("free things to do in Cardiff": days-out, Wales, price 0), was added first, so the fix could not over-correct. The set is now 21 cases. `claude-haiku-5-5`, `today` 2026-10-15.
+
+**Before the change (`.5`, one run):** 19/21. Both price cases failed, in opposite directions: `cheap-family-brighton` got `maxPricePerPerson: 0` and `free-days-out` got no price. So the model had the two backwards, and a code guard that drops a price of 0 would have fixed the first and broken the second. That is why the fix is in the prompt.
+
+**After the change (`.6`, three runs):** 21/21 in all three. Keywords-only baseline 7/21 (the same 7 no-invented-fields cases). 22967 input tokens and 513 to 587 output tokens per run.
+
+- `cheap-family-brighton` now finds 3 offers (was 0): no price is set.
+- `free-days-out` passes and finds 0 offers. The filters are right and the catalogue has no free days-out offer in Wales, so the empty state is the correct result. It is a check on the filters, not on offers.
+- `solo-comedy-glasgow` found 4 offers in run 1 and 1 in runs 2 and 3 while passing every time, so the filters varied in a field the case does not constrain (extra keywords are allowed). The scorer does not see this. Recorded, not investigated.
+- **Limits:** three samples on 21 author-written cases. "Cheap" and "free" are two wordings; other price words ("inexpensive", "a bargain", "for nothing") are untested, so this shows the rule works for these cases, not that it holds for all price wording.

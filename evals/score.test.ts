@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Filters } from "@/domain/filters";
-import { scoreCase } from "./score";
+import { scoreBaseline, scoreCase } from "./score";
 
 const filters = (value: unknown) => Filters.parse(value);
 
@@ -63,5 +63,25 @@ describe("scoreCase", () => {
     const actual = filters({ categories: ["events", "dining"] });
     expect(scoreCase({ categories: ["dining", "events"] }, actual)).toEqual({ pass: true });
     expect(scoreCase({ categories: ["dining"] }, actual)).toMatchObject({ pass: false });
+  });
+});
+
+describe("scoreBaseline", () => {
+  const interpret = () => filters({ keywords: ["cinema"] });
+
+  it("scores each case against the baseline's filters", () => {
+    const results = scoreBaseline(
+      [
+        { id: "keyword-only", query: "cinema", expect: { keywordsInclude: ["cinema"] } },
+        { id: "needs-category", query: "cinema", expect: { categories: ["days-out"] } },
+        { id: "empty", query: "cinema", expect: {} },
+      ],
+      interpret,
+    );
+    expect(results.map((r) => [r.id, r.verdict.pass])).toEqual([
+      ["keyword-only", true],
+      ["needs-category", false],
+      ["empty", true],
+    ]);
   });
 });

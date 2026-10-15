@@ -5,4 +5,4 @@ import "server-only";
 // output (effort, thinking, max tokens). Bump it on any change to one of those,
 // so a request log line or an eval result can be read against the prompt that
 // produced it. Format: the date of the change, then a counter for that day.
-export const PROMPT_VERSION = "2026-10-15.5";
+export const PROMPT_VERSION = "2026-10-15.6";

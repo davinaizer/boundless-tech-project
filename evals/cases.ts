@@ -111,4 +111,17 @@ export const EVAL_CASES: readonly EvalCase[] = [
   { id: "not-an-offer-question", query: "what's the capital of France", expect: {} },
   { id: "mood-surprise-me", query: "I'm bored, surprise me", expect: {} },
   { id: "something-tomorrow", query: "something to do tomorrow", expect: {} },
+  // From BUGS.md: "cheap" is not a number, so no price may be invented. The
+  // model once set maxPricePerPerson to 0, which returns no offers.
+  {
+    id: "cheap-family-brighton",
+    query: "a cheap family day out near Brighton",
+    expect: { categories: ["days-out"], region: "South East", audience: "family" },
+  },
+  // The counterpart of cheap-family-brighton: "free" does state a price of 0.
+  {
+    id: "free-days-out",
+    query: "free things to do in Cardiff",
+    expect: { categories: ["days-out"], region: "Wales", maxPricePerPerson: 0 },
+  },
 ];

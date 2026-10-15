@@ -2,7 +2,7 @@
 
 What is built, what is optional, and what is deliberately left out of this exercise, with the trade-off for each. Items below the line are documented so the omission is a visible decision, not a gap.
 
-Status of evidence: the scope decisions are judgements made against the original 8-hour budget (the plan is now about 10 hours; see [TODO](TODO.md)). Time figures are estimates, not measurements. Statements about production needs are hypotheses until measured.
+Status of evidence: the scope decisions are judgements made against the original 8-hour budget (the plan is now about 12 hours; see [TODO](TODO.md)). Time figures are estimates, not measurements. Statements about production needs are hypotheses until measured.
 
 ## Tiers
 
@@ -20,6 +20,7 @@ Status of evidence: the scope decisions are judgements made against the original
 | API versioning (`/v1`) | Below the line | Documented, not built |
 | Separate backend service | Below the line | Documented, with triggers |
 | Dependency scanning in CI | Below the line | Documented, not built |
+| Judge-graded eval for explanations | Below the line | Documented, not built |
 | Scalability and future improvements | Documented only | This file |
 
 ## In scope
@@ -45,7 +46,7 @@ Status of evidence: the scope decisions are judgements made against the original
 - **Format:** `v0.5.3+654.9602a29` is the package version, then build metadata: a build number and the short commit SHA. The format follows SemVer's build-metadata convention.
 - **Built:** computed at build time in `next.config` into a public environment value, shown in the footer, returned by `/api/health` and written into logs. The package version is bumped by hand at release (`pnpm version`) and the submission is tagged `v0.1.0`.
 - **Why:** a reviewer, or a bug report, can be tied to an exact build.
-- **Open points to settle in Phase 0:** which build number to use (a commit count from git history, or a CI run number) and, only if deployed, which environment variable carries the commit on Netlify. If either is unavailable the footer falls back to `dev` for that part and the build still passes.
+- **Settled in Phase 0:** the build number is the git commit count and the suffix is the short SHA, read in `next.config.ts`; CI checks out full history so the count is right. If git is unavailable the build part is `dev` (`v<package>+dev`) and the build still passes. Which environment variable carries the commit on Netlify is open until the optional deploy.
 - **Not built:** automated release versioning or a generated changelog. Conventional Commits are in place, so a changelog can be generated later.
 
 ### Model timeout and error shape
@@ -98,6 +99,12 @@ Status of evidence: the scope decisions are judgements made against the original
 - **Why:** one client, one deploy, and no long-running work or WebSockets.
 - **Triggers to split (my judgement, not a standard):** more than one client, background or long-running jobs, WebSockets, a team that owns the backend independently, or a different language. The port, services and domain layers are framework-light, so they could move into a service with the Route Handlers becoming thin callers.
 - **Cost of splitting:** a second deployment, CORS or a proxy, a shared types package, and a larger CI.
+
+### Judge-graded eval for the explain step
+
+- **Not built.** An on-demand eval where a judge model scores `explainResults` lines against a rubric: uses only the supplied fields, says why it fits rather than restating the filters, plain wording, distinct per offer.
+- **Why:** the deterministic grounding check already guards what a line may say, and a rejected or missing line falls back to `describeMatch`, so a bland sentence is a minor failure. The only judge available without touching `src/lib/ai` is the same model family that wrote the lines, on a set of about 18 lines: a weak, probably lenient signal, and it would need its own limits section.
+- **Revisit when:** explanation quality becomes a product goal or the explain prompt changes often. Use a stronger or different judge, check it against known-bad lines first, and treat the result as a signal, not a measure.
 
 ### Dependency scanning in CI
 
