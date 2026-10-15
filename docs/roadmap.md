@@ -26,7 +26,7 @@ Status of evidence: the scope decisions are judgements made against the original
 
 ### Observability
 
-- **Built:** each route handler writes one JSON line to stdout: request ID, endpoint, latency, number of model calls (0 or 1), input and output token counts, whether the keyword fallback ran, and the outcome. Locally it appears in the terminal; Netlify and Vercel capture stdout if the app is deployed.
+- **Built:** each route handler writes one JSON line to stdout: request ID, endpoint, latency, number of model calls (0, 1, or 2 when interpret retries), input and output token counts, whether the keyword fallback ran, and the outcome. Locally it appears in the terminal; Netlify and Vercel capture stdout if the app is deployed.
 - **Why:** cost per query and fallback rate are the two numbers that show whether the AI layer works and what it costs. The same fields make the eval comparable with live behaviour.
 - **Privacy:** query text is never logged. Logging it needs a data-protection review (see [architecture](architecture.md)).
 - **Not built:** tracing, OpenTelemetry, dashboards, alerts. They need a backend to send to and would show nothing on a demo with no traffic.
