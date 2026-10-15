@@ -33,3 +33,10 @@ h3 {
   font-family: var(--font-heading);
   letter-spacing: -0.015em;
 }
+
+/* A visible keyboard focus indicator on everything that takes focus (WCAG 2.4.7);
+   blue is 6.4:1 on white and 5.8:1 on the tint. */
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Filters } from "@/domain/filters";
 import { Audience, Category, Tier } from "@/domain/offer";
 import { UK_REGIONS } from "@/domain/search-offers";
 import { addFilter, filterChips, removeChip, type FilterField, type NewFilter } from "./chips";
+import { ADD_BUTTON, focusAfterRemoval } from "./focus";
 import { tierName } from "./format";
 
 const FIELD_LABELS: Record<FilterField, string> = {
@@ -58,6 +59,20 @@ export function ChipList({
   const [value, setValue] = useState("");
   const [invalid, setInvalid] = useState(false);
   const options = OPTIONS[field];
+  // Remove buttons by chip id, and the add button, so focus can be moved by hand.
+  const removeButtons = useRef(new Map<string, HTMLButtonElement>());
+  const addButton = useRef<HTMLButtonElement>(null);
+
+  function remove(chip: (typeof chips)[number]) {
+    if (disabled) return;
+    // Focus moves before the chip unmounts, so it is never left on the page body.
+    const target = focusAfterRemoval(
+      chips.map((c) => c.id),
+      chip.id,
+    );
+    (target === ADD_BUTTON ? addButton.current : removeButtons.current.get(target))?.focus();
+    onChange(removeChip(filters, chip));
+  }
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -70,12 +85,13 @@ export function ChipList({
     setInvalid(false);
     setAdding(false);
     setValue("");
+    addButton.current?.focus();
     onChange(next);
   }
 
   return (
     <div>
-      <ul className="flex flex-wrap items-center gap-3" aria-label="Understood as">
+      <ul className="flex flex-wrap items-center gap-3">
         <li className="text-base text-slate">Understood as</li>
         {chips.map((chip) => (
           <li
@@ -87,10 +103,15 @@ export function ChipList({
             </span>
             <button
               type="button"
-              disabled={disabled}
-              onClick={() => onChange(removeChip(filters, chip))}
+              ref={(element) => {
+                if (element) removeButtons.current.set(chip.id, element);
+                else removeButtons.current.delete(chip.id);
+              }}
+              // aria-disabled, not disabled, so focus stays while results refresh.
+              aria-disabled={disabled}
+              onClick={() => remove(chip)}
               aria-label={`Remove filter ${chip.label} ${chip.value}`}
-              className="text-blue disabled:opacity-50"
+              className="inline-flex size-6 items-center justify-center text-blue aria-disabled:opacity-50"
             >
               ×
             </button>
@@ -100,10 +121,14 @@ export function ChipList({
         <li>
           <button
             type="button"
-            disabled={disabled}
-            onClick={() => setAdding((open) => !open)}
+            ref={addButton}
+            aria-disabled={disabled}
+            onClick={() => {
+              if (!disabled) setAdding((open) => !open);
+            }}
             aria-expanded={adding}
-            className="rounded-full border border-dashed border-blue bg-white px-[14px] py-1 text-base text-blue disabled:opacity-50"
+            aria-controls="add-filter-form"
+            className="min-h-6 rounded-full border border-dashed border-blue bg-white px-[14px] py-1 text-base text-blue aria-disabled:opacity-50"
           >
             Add a filter
           </button>
@@ -111,7 +136,11 @@ export function ChipList({
       </ul>
 
       {adding && (
-        <form onSubmit={submit} className="mt-3 flex flex-wrap items-center gap-3">
+        <form
+          id="add-filter-form"
+          onSubmit={submit}
+          className="mt-3 flex flex-wrap items-center gap-3"
+        >
           <label className="text-base text-slate">
             <span className="sr-only">Filter type</span>
             <select

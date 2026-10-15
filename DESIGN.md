@@ -152,7 +152,7 @@ Tone: plain, friendly, sentence case. Buttons say what happens ("Find offers"). 
 - **muted (#4F6873):** secondary text such as partner names and hints.
 - **tint (#EFF4F6):** page background and chip and tag fills.
 - **line (#DFECEE):** hairline borders on cards.
-- **periwinkle (#CED7EC):** borders of the query box, chips and saving tags.
+- **periwinkle (#CED7EC):** borders of chips and saving tags. Not the query box: periwinkle on white is 1.44:1, under the 3:1 that WCAG 1.4.11 asks of an input's boundary, so the query box uses muted (5.9:1).
 - **surface (#FFFFFF):** header, hero, cards.
 
 Red is used sparingly so it keeps its meaning. Do not use it for tier labels or errors.
@@ -182,7 +182,7 @@ Three radii only: 16px for tiles, 32px for the large fee panel, and full pills f
 ## Components
 
 - **button-primary:** red pill, white bold label.
-- **query-input:** white pill with a periwinkle border.
+- **query-input:** white pill with a muted border (contrast, see Colors).
 - **filter-chip / filter-chip-add:** tinted pill with a bold blue field name and a remove mark. The add chip has a dashed blue border.
 - **offer-card:** white tile with the offer title in blue, partner in muted text, one line of why it matches, and a saving tag. A slate tier strip closes the tile and shows tier eligibility and validity.
 - **saving-tag:** the per-use saving as tint pill with a blue figure.

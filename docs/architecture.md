@@ -172,6 +172,7 @@ Decided in Phase 2:
 
 Decided in Phase 3:
 - The UI (`src/app/_components/`) is one `"use client"` leaf, `Finder`, over `ChipList`, `OfferCard` and `FeePanel`; `page.tsx` and `layout.tsx` stay Server Components. State is in React until the URL item. A submit runs interpret, search, then explain; a chip edit runs search and explain only. `createLatest` aborts the older request and ignores its answer, so a stale response never replaces a newer one. Explanations are secondary: if `/api/explain` fails the results stay without their lines. Ten cards are listed, the explain cap; the fee panel is computed over all matches and says so. The client reaches the API only through `api-client.ts`, which parses each response with the domain schemas and maps error codes to fixed sentences. The UI's component behaviour is covered by Playwright in Phase 4; its pure helpers (`format`, `chips`, `latest`, `api-client`) have unit tests.
+- Accessibility basics (WCAG 2.2 AA as the target for the one page): text pairs from the theme pass 4.5:1; the query input uses the `muted` border for the 3:1 boundary rule; remove buttons keep focus through a refresh (`aria-disabled`) and hand it to the next chip (`focus.ts`); one `role="status"` line announces counts and loading; a global `:focus-visible` outline. Checked once with axe-core and by keyboard, not audited.
 
 ## Contracts
 

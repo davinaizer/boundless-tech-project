@@ -38,6 +38,23 @@ type State =
   | { phase: "error"; code: ClientErrorCode }
   | Ready;
 
+function statusText(state: State): string {
+  switch (state.phase) {
+    case "loading":
+      return "Finding offers…";
+    case "error":
+      return "";
+    case "ready":
+      if (state.refreshing) return "Updating results…";
+      if (state.offers.length === 0) return "No offers match.";
+      return state.offers.length === 1
+        ? "1 offer matches."
+        : `${state.offers.length} offers match.`;
+    default:
+      return "";
+  }
+}
+
 export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
   const [query, setQuery] = useState("");
   const [hint, setHint] = useState<string | null>(null);
@@ -143,7 +160,8 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
               maxLength={maxQueryChars}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="A cheap family day out near Brighton, under £30 a head"
-              className="min-w-0 flex-1 basis-80 rounded-full border-2 border-periwinkle bg-white px-[26px] py-[15px] text-slate outline-none focus:border-blue"
+              // muted, not periwinkle: the boundary of the input needs 3:1 (WCAG 1.4.11).
+              className="min-w-0 flex-1 basis-80 rounded-full border-2 border-muted bg-white px-[26px] py-[15px] text-slate outline-none placeholder:text-muted focus:border-blue focus:ring-2 focus:ring-blue"
             />
             <button
               type="submit"
@@ -171,11 +189,15 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1200px] px-5 py-10 sm:px-10" aria-live="polite">
+      {/* One short announcement per change; the cards themselves are not live. */}
+      <p role="status" className="sr-only">
+        {statusText(state)}
+      </p>
+      <section className="mx-auto max-w-[1200px] px-5 py-10 sm:px-10">
         {state.phase === "idle" && (
           <p className="text-muted">Your matching offers will appear here.</p>
         )}
-        {state.phase === "loading" && <p role="status">Finding offers…</p>}
+        {state.phase === "loading" && <p>Finding offers…</p>}
         {state.phase === "error" && (
           <div role="alert" className="rounded-tile border border-line bg-white px-6 py-5">
             <p>{errorMessage(state.code)}</p>
