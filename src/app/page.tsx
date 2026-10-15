@@ -1,7 +1,6 @@
+import { env } from "@/lib/env";
+import { Finder } from "./_components/Finder";
+
 export default function Home() {
-  return (
-    <main className="p-8">
-      <h1 className="text-2xl font-semibold">Benefits finder</h1>
-    </main>
-  );
+  return <Finder maxQueryChars={env.MAX_QUERY_CHARS} />;
 }

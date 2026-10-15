@@ -119,7 +119,7 @@ docs/
   brief/ adr/ research/ design/    challenge brief, decisions, evidence, mockups
   architecture.md, roadmap.md, TODO.md
 src/
-  app/                 pages and Route Handlers (health endpoint exists)
+  app/                 the finder page, `_components/`, and Route Handlers (`/api/interpret`, `search`, `explain`, `health`)
   domain/              types, Zod schemas, SearchOffers port, estimateSavings
   lib/                 env.ts, version.ts, ai/ (model client and mock); log.ts planned
   data/                sample catalogue, in-memory and Postgres adapters
