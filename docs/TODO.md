@@ -72,7 +72,6 @@ Phases are small and reversible. Each ends with a review gate before the next st
 - [ ] "Context and assumptions" and "what I would do at the company" in the README
 - [ ] Record the demo (Loom or similar) from the local run, with the real model; this is the guaranteed deliverable
 - [ ] Check ADRs, architecture and the roadmap are current
-- [ ] Tag `v0.1.0` at submission
 
 **Done when:** a new reader can set up, run and understand the decisions from the README.
 
@@ -90,6 +89,13 @@ Gate: Phases 0 to 5 complete and the demo recorded ([ADR-011](adr/011-local-firs
 - [ ] Slides in Markdown
 - [ ] Netlify and Vercel parity check (only if deployed)
 - [ ] OpenAPI: generate `openapi.json` from the Zod schemas (see [roadmap](roadmap.md); check Zod version support first)
+
+## Final review (last step, after every phase that is being done, including the optional ones)
+
+- [ ] Review all documentation (README, TODO, AGENTS, architecture, roadmap, DESIGN, ADRs and research notes) against the code as built: no stale status, paths, counts, versions, checkboxes, times or links; every *pending* marker resolved; the time log filled in; superseded or unbuilt items marked as such. Accepted ADRs are not edited, only superseded
+- [ ] Tag `v0.1.0` at submission
+
+**Done when:** a reader who follows only the repository finds nothing that contradicts the code.
 
 ## Below the line (documented, not built)
 
