@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Filters } from "@/domain/filters";
+import type { Explanation } from "@/domain/match-reasons";
 import type { Offer } from "@/domain/offer";
 import type { SavingsEstimate } from "@/domain/savings";
 import {
@@ -33,7 +34,7 @@ type Ready = {
   offers: Offer[];
   savings: SavingsEstimate;
   // null while /api/explain is pending; {} when no lines could be had.
-  lines: Record<string, string> | null;
+  lines: Record<string, Explanation> | null;
   refreshing: boolean;
 };
 
@@ -92,10 +93,10 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
     });
     const ids = found.offers.slice(0, MAX_SHOWN).map((offer) => offer.id);
     if (ids.length === 0) return;
-    let lines: Record<string, string> = {};
+    let lines: Record<string, Explanation> = {};
     try {
       const explained = await explainRequest(filters, ids, req.signal);
-      lines = Object.fromEntries(explained.explanations.map((e) => [e.offerId, e.text]));
+      lines = Object.fromEntries(explained.explanations.map((e) => [e.offerId, e]));
     } catch (error) {
       if (isAbort(error)) return;
       // Explanations are secondary: results stay, without their lines.

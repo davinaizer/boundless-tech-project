@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Filters } from "./filters";
-import { MAX_EXPLAINED_OFFERS } from "./match-reasons";
+import { LineSource, MAX_EXPLAINED_OFFERS } from "./match-reasons";
 import { Offer } from "./offer";
 import { SavingsEstimate } from "./savings";
 
@@ -56,5 +56,7 @@ export const ExplainRequest = z.strictObject({
 });
 
 export const ExplainResponse = z.strictObject({
-  explanations: z.array(z.strictObject({ offerId: z.string(), text: z.string() })),
+  explanations: z.array(
+    z.strictObject({ offerId: z.string(), text: z.string(), source: LineSource }),
+  ),
 });

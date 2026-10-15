@@ -98,6 +98,12 @@ components:
   offer-card-title:
     textColor: "{colors.blue}"
     typography: "{typography.title}"
+  why-it-fits:
+    backgroundColor: "{colors.tint}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 12px 16px 16px
   saving-tag:
     backgroundColor: "{colors.tint}"
     textColor: "{colors.blue}"
@@ -197,7 +203,8 @@ Three radii only: 16px for tiles, 32px for the large fee panel, and full pills f
 - **button-primary:** red pill, white bold label.
 - **query-input:** white pill with a muted border (contrast, see Colors).
 - **filter-chip / filter-chip-add:** tinted pill with a bold blue field name and a remove mark. The add chip has a dashed blue border.
-- **offer-card:** white tile with the offer title in blue, partner in muted text, one line of why it matches, and a saving tag. A tier strip closes the tile and shows tier eligibility and validity: blue for Standard offers, slate for Plus-only offers.
+- **offer-card:** white tile with the offer title in blue, partner in muted text, the why-it-fits block, and a saving tag. A tier strip closes the tile and shows tier eligibility and validity: blue for Standard offers, slate for Plus-only offers.
+- **why-it-fits:** a tinted block inset in the offer card between the header and the tier strip, so the line that explains the match reads as its own element. A label "Why it fits" (label type, blue) sits above the line (body, ink; 11.7:1 on tint). The caption says where the line came from: a model line has a blue spark mark and "Written by AI"; a deterministic `describeMatch` line has no mark and says "Matched on your filters". The spark is used only here and is never shown on a deterministic line. While `/api/explain` is pending the block is already there, with a spinner and "Working out why it fits…", so the card does not change height; the line then fades in once (150 ms, not under reduced motion). The caption is `muted` on `tint` (5.3:1) and the label `blue` on `tint` (5.8:1), computed from the hex values.
 - **saving-tag:** the per-use saving as tint pill with a blue figure.
 - **fee-panel:** ink card with the illustrative yearly arithmetic for the best three matches (stated, with how many other matches are not counted), then one plain sentence per tier in its own tile, blue for Standard and slate for Plus like the offer cards' tier strips (a thin white border keeps the tiles defined on the darker ink panel): its fee, what the counted offers could save and the difference. Standard is always shown; Plus only when a counted offer needs it. The text on the 2026-10 mockup ("Offers you can use", margin pill, all matches) is superseded.
 - **savings-badge:** red circle overlapping the panel's top right corner, showing "About £X a year": the total of the counted offers, in whole pounds.
@@ -211,6 +218,7 @@ The mockup is `docs/design/benefits-finder-mockup-boundless.png`. The first, neu
 - Do keep red for the primary action and the yearly-saving badge.
 - Do show filter changes immediately, without a page reload.
 - Don't use the Boundless logo, wordmark, illustrations or fonts.
+- Don't mark a deterministic line as AI-written: the spark and "Written by AI" belong to a model line only, per line.
 - Don't state a saving the deterministic estimate did not produce. Model output never supplies prices or savings.
 - Don't add a fourth radius or a second action colour.
 - Don't rely on colour alone: tier eligibility is always written in the tier strip.

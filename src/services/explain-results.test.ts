@@ -53,7 +53,12 @@ function scripted(...results: StructuredResult[]) {
 const filters = Filters.parse({ categories: ["dining"], region: "London" });
 const one = offer(1);
 const two = offer(2);
-const fallback = (o: Offer) => ({ offerId: o.id, text: describeMatch(o, filters) });
+const fallback = (o: Offer) => ({
+  offerId: o.id,
+  text: describeMatch(o, filters),
+  source: "fallback" as const,
+});
+const modelLine = (o: Offer, text: string) => ({ offerId: o.id, text, source: "llm" as const });
 
 describe("explainResults", () => {
   it("makes no model call and loads nothing for an empty ID list", async () => {
@@ -90,8 +95,8 @@ describe("explainResults", () => {
     });
     expect(result).toEqual({
       explanations: [
-        { offerId: one.id, text: "Dining in London, as you asked." },
-        { offerId: two.id, text: "A London table for two." },
+        modelLine(one, "Dining in London, as you asked."),
+        modelLine(two, "A London table for two."),
       ],
       source: "llm",
       modelCalls: 1,
@@ -106,10 +111,7 @@ describe("explainResults", () => {
       offers: portWith([one, two]),
     });
     expect(result.source).toBe("llm");
-    expect(result.explanations).toEqual([
-      fallback(one),
-      { offerId: two.id, text: "A London table." },
-    ]);
+    expect(result.explanations).toEqual([fallback(one), modelLine(two, "A London table.")]);
   });
 
   it("leaves failure out on success and when no call is made", async () => {

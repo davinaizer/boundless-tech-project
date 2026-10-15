@@ -54,6 +54,8 @@ test("the button and each card show a spinner until their request answers", asyn
   releaseInterpret();
   const pending = page.getByText("Working out why it fits…");
   await expect(pending.first()).toBeVisible();
+  // The labelled block is there before the line, so nothing jumps when it arrives.
+  await expect(page.getByText("Why it fits", { exact: true }).first()).toBeVisible();
   await expect(offerCards(page).first().locator("svg").first()).toBeVisible();
   await expect(find).toBeEnabled();
   await expect(find.locator("svg")).toHaveCount(0);
@@ -63,6 +65,32 @@ test("the button and each card show a spinner until their request answers", asyn
   await expect(
     page.getByText("Mock model line: this offer fits your search.").first(),
   ).toBeVisible();
+  await expect(page.getByText("Written by AI").first()).toBeVisible();
+});
+
+test("a deterministic line is not labelled as AI-written, even beside a model line", async ({
+  page,
+}) => {
+  // The mock always answers explain with model lines, so one is rewritten as the
+  // service would send an offer the model left out.
+  await page.route("**/api/explain", async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as {
+      explanations: { offerId: string; text: string; source: string }[];
+    };
+    body.explanations[0] = {
+      ...body.explanations[0]!,
+      text: "Days out offer, in South East",
+      source: "fallback",
+    };
+    await route.fulfill({ response, json: body });
+  });
+
+  await search(page);
+
+  await expect(page.getByText("Matched on your filters")).toHaveCount(1);
+  await expect(page.getByText("Days out offer, in South East")).toBeVisible();
+  await expect(page.getByText("Written by AI").first()).toBeVisible();
 });
 
 test("enabled buttons show a pointer cursor, and an aria-disabled one does not", async ({

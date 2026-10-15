@@ -3,6 +3,7 @@ import { Filters } from "@/domain/filters";
 import {
   ApiRequestError,
   errorMessage,
+  explainRequest,
   interpretRequest,
   isAbort,
   searchRequest,
@@ -33,6 +34,22 @@ describe("api client", () => {
       filters: { categories: [], keywords: ["spa"] },
       source: "llm",
     });
+  });
+
+  it("keeps each explanation's source and rejects a line with a missing or unknown one", async () => {
+    const filters = Filters.parse({ keywords: ["spa"] });
+    stubFetch(async () =>
+      Response.json({ explanations: [{ offerId: "o1", text: "Fits.", source: "llm" }] }),
+    );
+    expect(await explainRequest(filters, ["o1"], signal)).toEqual({
+      explanations: [{ offerId: "o1", text: "Fits.", source: "llm" }],
+    });
+    stubFetch(async () => Response.json({ explanations: [{ offerId: "o1", text: "Fits." }] }));
+    expect(await codeOf(explainRequest(filters, ["o1"], signal))).toBe("bad_response");
+    stubFetch(async () =>
+      Response.json({ explanations: [{ offerId: "o1", text: "Fits.", source: "ai" }] }),
+    );
+    expect(await codeOf(explainRequest(filters, ["o1"], signal))).toBe("bad_response");
   });
 
   it("maps an error body to its code", async () => {
