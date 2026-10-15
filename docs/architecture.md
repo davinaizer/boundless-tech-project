@@ -166,7 +166,7 @@ All requests and responses are validated with Zod at the boundary.
 
 | Field | Type | Note |
 |---|---|---|
-| `categories` | list of category | e.g. days out, dining, travel, motoring |
+| `categories` | list of category | `days-out`, `dining`, `shopping`, `travel`, `motoring`, `events` (a simplified set, from the public site as of 2026-10-14); de-duplicated |
 | `region` | string | free text matched against offer regions |
 | `maxPricePerPerson` | number | Zod validates range; not expressible in the model's JSON schema |
 | `audience` | solo, couple or family | |
@@ -209,7 +209,7 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 | `category` | Category filter | Observed |
 | `expiryDate` (optional) | Expired offers hidden by default | Observed |
 | `tier` | Standard or Plus availability | Probable (cards adapt to membership level) |
-| `region`, `audience`, `typicalPricePerPerson` | Region, audience and budget filters | Not observed; sample only |
+| `region`, `audience`, `typicalPricePerPerson` | Region, audience and budget filters. `audience` is a non-empty list (an offer can suit several audiences); money is in pounds with at most two decimals | Not observed; sample only |
 | `typicalSavingPerUse`, `assumedUsesPerYear` | Illustrative savings estimate | Not applicable (illustrative) |
 
 **URL state.** Filters are serialised into the URL query string, so a result view is shareable and survives reload.
