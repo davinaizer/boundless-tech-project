@@ -151,11 +151,17 @@ describe("POST /api/search", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       offers: { id: string; category: string }[];
-      savings: { offers: unknown[]; tiers: unknown[]; bestAnnualSavingPence: number };
+      savings: {
+        offers: unknown[];
+        countedOffers: number;
+        tiers: unknown[];
+        bestAnnualSavingPence: number;
+      };
     };
     expect(body.offers.length).toBeGreaterThan(0);
     expect(body.offers.every((offer) => offer.category === "dining")).toBe(true);
     expect(body.savings.offers).toHaveLength(body.offers.length);
+    expect(body.savings.countedOffers).toBe(Math.min(3, body.offers.length));
     expect(body.savings.tiers).toHaveLength(2);
     expect(ai.calls).toHaveLength(0);
   });

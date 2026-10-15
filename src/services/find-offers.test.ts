@@ -63,9 +63,22 @@ describe("search then savings, no AI", () => {
     // 7.25 x 3 = £21.75, 9 x 2 = £18 (Plus only), 5.50 x 2 = £11.
     expect(savings.offers.map((o) => o.annualSavingPence)).toEqual([2175, 1800, 1100]);
     expect(savings.tiers).toEqual([
-      { tier: "standard", feePence: 4500, usableSavingPence: 3275, marginPence: -1225 },
-      { tier: "plus", feePence: 7800, usableSavingPence: 5075, marginPence: -2725 },
+      {
+        tier: "standard",
+        feePence: 4500,
+        usableOffers: 2,
+        usableSavingPence: 3275,
+        marginPence: -1225,
+      },
+      {
+        tier: "plus",
+        feePence: 7800,
+        usableOffers: 3,
+        usableSavingPence: 5075,
+        marginPence: -2725,
+      },
     ]);
+    expect(savings.countedOffers).toBe(3);
     expect(savings.bestAnnualSavingPence).toBe(5075);
   });
 });

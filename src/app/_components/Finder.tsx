@@ -270,8 +270,8 @@ export function Finder({ maxQueryChars }: { maxQueryChars: number }) {
               </div>
               {ready.offers.length > MAX_SHOWN && (
                 <p className="mt-1 text-base text-muted">
-                  The {MAX_SHOWN} best matches are listed. The fee panel counts all{" "}
-                  {ready.offers.length}.
+                  The {MAX_SHOWN} best matches are listed. The fee panel uses the best{" "}
+                  {ready.savings.countedOffers}.
                 </p>
               )}
               <ul className="mt-4 space-y-4">

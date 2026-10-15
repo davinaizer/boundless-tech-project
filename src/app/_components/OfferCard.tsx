@@ -37,7 +37,11 @@ export function OfferCard({
           </div>
         )}
       </div>
-      <div className="flex flex-wrap justify-between gap-x-4 bg-slate px-6 py-[9px] font-heading text-base font-bold text-white">
+      <div
+        className={`flex flex-wrap justify-between gap-x-4 px-6 py-[9px] font-heading text-base font-bold text-white ${
+          offer.tier === "standard" ? "bg-blue" : "bg-slate"
+        }`}
+      >
         <span>{tierText(offer.tier)}</span>
         <span>{validityText(offer.expiryDate)}</span>
       </div>

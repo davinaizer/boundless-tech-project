@@ -6,6 +6,7 @@ colors:
   red: "#E51F2D"
   blue: "#2B5FA6"
   slate: "#36535F"
+  ink: "#1F3440"
   body: "#444444"
   muted: "#4F6873"
   tint: "#EFF4F6"
@@ -104,22 +105,33 @@ components:
     rounded: "{rounded.full}"
     padding: 8px 18px
   tier-strip:
+    backgroundColor: "{colors.blue}"
+    textColor: "{colors.surface}"
+    typography: "{typography.label}"
+    padding: 9px 24px
+  tier-strip-plus:
     backgroundColor: "{colors.slate}"
     textColor: "{colors.surface}"
     typography: "{typography.label}"
     padding: 9px 24px
   fee-panel:
-    backgroundColor: "{colors.slate}"
+    backgroundColor: "{colors.ink}"
     textColor: "{colors.surface}"
     typography: "{typography.body}"
     rounded: "{rounded.md}"
     padding: 46px 28px 26px
-  fee-panel-result:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.slate}"
-    typography: "{typography.label}"
-    rounded: "{rounded.full}"
-    padding: 4px 16px
+  tier-tile:
+    backgroundColor: "{colors.blue}"
+    textColor: "{colors.surface}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 16px 20px
+  tier-tile-plus:
+    backgroundColor: "{colors.slate}"
+    textColor: "{colors.surface}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 16px 20px
   savings-badge:
     backgroundColor: "{colors.red}"
     textColor: "{colors.surface}"
@@ -146,8 +158,9 @@ Tone: plain, friendly, sentence case. Buttons say what happens ("Find offers"). 
 ## Colors
 
 - **red (#E51F2D):** the single action colour. Used for the primary button and the yearly-saving badge only.
-- **blue (#2B5FA6):** headings, offer titles, figures and links.
-- **slate (#36535F):** supporting text, the tier strip and the fee panel background.
+- **blue (#2B5FA6):** headings, offer titles, figures, links, the tier strip of Standard offers and the Standard tile in the fee panel (white text on it is 6.4:1).
+- **slate (#36535F):** supporting text, the tier strip of Plus-only offers and the Plus tile in the fee panel.
+- **ink (#1F3440):** the fee panel background only, a darker step of slate so the panel is not mistaken for the Plus colour. White text on it is about 12.9:1.
 - **body (#444444):** running text on white.
 - **muted (#4F6873):** secondary text such as partner names and hints.
 - **tint (#EFF4F6):** page background and chip and tag fills.
@@ -184,10 +197,10 @@ Three radii only: 16px for tiles, 32px for the large fee panel, and full pills f
 - **button-primary:** red pill, white bold label.
 - **query-input:** white pill with a muted border (contrast, see Colors).
 - **filter-chip / filter-chip-add:** tinted pill with a bold blue field name and a remove mark. The add chip has a dashed blue border.
-- **offer-card:** white tile with the offer title in blue, partner in muted text, one line of why it matches, and a saving tag. A slate tier strip closes the tile and shows tier eligibility and validity.
+- **offer-card:** white tile with the offer title in blue, partner in muted text, one line of why it matches, and a saving tag. A tier strip closes the tile and shows tier eligibility and validity: blue for Standard offers, slate for Plus-only offers.
 - **saving-tag:** the per-use saving as tint pill with a blue figure.
-- **fee-panel:** slate card with the illustrative yearly arithmetic per offer, then one row per membership tier (fee, usable offers, margin). The margin sits in a white pill.
-- **savings-badge:** red circle overlapping the panel's top right corner, showing the highest tier total.
+- **fee-panel:** ink card with the illustrative yearly arithmetic for the best three matches (stated, with how many other matches are not counted), then one plain sentence per tier in its own tile, blue for Standard and slate for Plus like the offer cards' tier strips (a thin white border keeps the tiles defined on the darker ink panel): its fee, what the counted offers could save and the difference. Standard is always shown; Plus only when a counted offer needs it. The text on the 2026-10 mockup ("Offers you can use", margin pill, all matches) is superseded.
+- **savings-badge:** red circle overlapping the panel's top right corner, showing "About £X a year": the total of the counted offers, in whole pounds.
 
 The mockup is `docs/design/benefits-finder-mockup-boundless.png`. The first, neutral version is `docs/design/benefits-finder-mockup-v1.png`.
 
