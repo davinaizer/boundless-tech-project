@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { estimateSavings } from "@/domain/savings";
 import { SAMPLE_OFFERS } from "@/data/sample-catalogue";
 import {
+  audienceText,
   formatPence,
   formatPounds,
   formatWholePounds,
+  priceText,
   tierSentence,
   tiersToShow,
   tierText,
@@ -167,5 +169,26 @@ describe("the fee panel's figures", () => {
       expect(formatPence(tier.feePence)).toMatch(/^£[\d,]+(\.\d{2})?$/);
       expect(tierSentence(tier, savings.countedOffers)).not.toMatch(/NaN|undefined/);
     }
+  });
+});
+
+describe("priceText", () => {
+  it("says Free for no price and a head otherwise", () => {
+    expect(priceText(0)).toBe("Free");
+    expect(priceText(12)).toBe("£12 a head");
+    expect(priceText(12.5)).toBe("£12.50 a head");
+  });
+});
+
+describe("audienceText", () => {
+  it("reads all three as Anyone, whatever the order", () => {
+    expect(audienceText(["family", "solo", "couple"])).toBe("Anyone");
+  });
+
+  it("lists fewer in a fixed order, sentence case", () => {
+    expect(audienceText(["solo"])).toBe("Solo");
+    expect(audienceText(["family"])).toBe("Families");
+    expect(audienceText(["family", "couple"])).toBe("Couples and families");
+    expect(audienceText(["family", "solo"])).toBe("Solo and families");
   });
 });

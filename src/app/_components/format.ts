@@ -1,4 +1,4 @@
-import type { Tier } from "@/domain/offer";
+import type { Audience, Tier } from "@/domain/offer";
 import type { SavingsEstimate } from "@/domain/savings";
 
 // Pence to pounds for display: whole pounds without decimals, otherwise two, with
@@ -77,4 +77,27 @@ export function tierText(tier: Tier): string {
 
 export function tierName(tier: Tier): string {
   return tier === "standard" ? "Standard" : "Plus";
+}
+
+// An offer's typical price per person, in pounds, as a fact on the card. Free is
+// said as "Free", not "£0 a head".
+export function priceText(pounds: number): string {
+  return pounds === 0 ? "Free" : `${formatPounds(pounds)} a head`;
+}
+
+const AUDIENCE_ORDER: readonly Audience[] = ["solo", "couple", "family"];
+const AUDIENCE_WORDS: Record<Audience, string> = {
+  solo: "solo",
+  couple: "couples",
+  family: "families",
+};
+
+// Who an offer suits, in a fixed order whatever the data order. All three reads
+// as "Anyone", which is what a reader means by it.
+export function audienceText(audience: readonly Audience[]): string {
+  const words = AUDIENCE_ORDER.filter((a) => audience.includes(a)).map((a) => AUDIENCE_WORDS[a]);
+  if (words.length === AUDIENCE_ORDER.length) return "Anyone";
+  const text =
+    words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : words[0]!;
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
