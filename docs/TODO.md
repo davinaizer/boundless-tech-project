@@ -75,8 +75,8 @@ Added 2026-10-15 after the Phase 2 checkpoint, from a comparison with an earlier
 
 ## Phase 4: e2e (0h40)
 
-- [x] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path. Built 2026-10-15 with `@playwright/test@1.64.1`: `playwright.config.ts` (Chromium, port 3100, build and start, mock provider and in-memory adapter set in the config), `e2e/search.spec.ts` and `e2e/edit-chip.spec.ts`; the mock provider gained canned answers for one exact query (`src/lib/ai/canned.ts`, 4 unit tests through the real services). 236 unit tests and 2 e2e tests green locally, including a run with `AI_PROVIDER=anthropic`, a bogus key and an unreachable `DATABASE_URL` in the shell. Not yet run: the `e2e` job in `ci.yml` (needs a push). The specs assert properties, not counts, since offers expire against the real date
-- [ ] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR
+- [x] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path. Built 2026-10-15 with `@playwright/test@1.64.1`: `playwright.config.ts` (Chromium, port 3100, build and start, mock provider and in-memory adapter set in the config), `e2e/search.spec.ts` and `e2e/edit-chip.spec.ts`; the mock provider gained canned answers for one exact query (`src/lib/ai/canned.ts`, 4 unit tests through the real services). 236 unit tests and 2 e2e tests green locally, including a run with `AI_PROVIDER=anthropic`, a bogus key and an unreachable `DATABASE_URL` in the shell. The `e2e` job in `ci.yml` is green on its first run (reported by the author, 2026-10-15; confirmed with `gh run list` for `20e98d3`: https://github.com/davinaizer/boundless-tech-project/actions/runs/38770942870). The specs assert properties, not counts, since offers expire against the real date
+- [x] Phase checkpoint: run `review-phase` in a fresh session (about 10 min); resolve each drift item by fixing the code, fixing the document or writing a superseding ADR. Run 2026-10-15: DRIFT, two documentation items, fixed in the docs with no code or ADR change: README layout omitted the `e2e` CI job; Phase 4 time log cell was empty. Not run in the review: `pnpm e2e` and `pnpm test:integration` (CI green for `20e98d3`). Noted, not drift: `canned.ts` is described in the architecture prose but not named in the `lib/ai` tree line; `BUGS.md` reports a price filter of 0 for a "cheap family day out" query, a real-model behaviour the mock e2e cannot catch
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
 
@@ -133,7 +133,7 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | 2 | 2h25 | 2h (recorded by the author) |
 | 2.1 | 0h50 | |
 | 3 | 2h05 | 53 min (recorded by the author) |
-| 4 | 0h40 | |
+| 4 | 0h40 | 14 min (recorded by the author) |
 | 4.1 (optional) | 0.75h | |
 | 5 | 1h | |
 | 6 (optional) | 0.75h | |
