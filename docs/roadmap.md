@@ -2,7 +2,7 @@
 
 What is built, what is optional, and what is deliberately left out of this exercise, with the trade-off for each. Items below the line are documented so the omission is a visible decision, not a gap.
 
-Status of evidence: the scope decisions are judgements made against the original 8-hour budget (the plan is now about 10 hours; see [TODO](TODO.md)). Time figures are estimates, not measurements. Statements about production needs are hypotheses until measured.
+Status of evidence: the scope decisions are judgements made against the original 8-hour budget (the plan is now about 12 hours; see [TODO](TODO.md)). Time figures are estimates, not measurements. Statements about production needs are hypotheses until measured.
 
 ## Tiers
 
@@ -20,6 +20,7 @@ Status of evidence: the scope decisions are judgements made against the original
 | API versioning (`/v1`) | Below the line | Documented, not built |
 | Separate backend service | Below the line | Documented, with triggers |
 | Dependency scanning in CI | Below the line | Documented, not built |
+| Judge-graded eval for explanations | Below the line | Documented, not built |
 | Scalability and future improvements | Documented only | This file |
 
 ## In scope
@@ -45,7 +46,7 @@ Status of evidence: the scope decisions are judgements made against the original
 - **Format:** `v0.5.3+654.9602a29` is the package version, then build metadata: a build number and the short commit SHA. The format follows SemVer's build-metadata convention.
 - **Built:** computed at build time in `next.config` into a public environment value, shown in the footer, returned by `/api/health` and written into logs. The package version is bumped by hand at release (`pnpm version`) and the submission is tagged `v0.1.0`.
 - **Why:** a reviewer, or a bug report, can be tied to an exact build.
-- **Open points to settle in Phase 0:** which build number to use (a commit count from git history, or a CI run number) and, only if deployed, which environment variable carries the commit on Netlify. If either is unavailable the footer falls back to `dev` for that part and the build still passes.
+- **Settled in Phase 0:** the build number is the git commit count and the suffix is the short SHA, read in `next.config.ts`; CI checks out full history so the count is right. If git is unavailable the build part is `dev` (`v<package>+dev`) and the build still passes. Which environment variable carries the commit on Netlify is open until the optional deploy.
 - **Not built:** automated release versioning or a generated changelog. Conventional Commits are in place, so a changelog can be generated later.
 
 ### Model timeout and error shape

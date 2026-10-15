@@ -18,13 +18,13 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 |---|---|---|
 | [001](001-problem-and-idea.md) | Problem and idea selection | Accepted |
 | [002](002-ai-boundary.md) | AI boundary | Accepted |
-| [003](003-stack-and-hosting.md) | Stack and hosting | Accepted |
+| [003](003-stack-and-hosting.md) | Stack and hosting | Accepted; hosting superseded by ADR-011, ESLint and Prettier by ADR-012 |
 | [004](004-data-layer.md) | Data layer | Superseded by ADR-010 |
 | [005](005-llm-provider.md) | LLM provider and model | Accepted |
-| [006](006-demo-protection.md) | Public demo protection | Accepted |
-| [007](007-test-strategy.md) | Test strategy | Accepted |
+| [006](006-demo-protection.md) | Public demo protection | Accepted; narrowed by ADR-011 (rate and spend limits only if deployed) |
+| [007](007-test-strategy.md) | Test strategy | Accepted; extended by ADR-010 (integration layer) |
 | [008](008-design-direction.md) | Design direction | Accepted |
-| [009](009-nextjs-conventions.md) | Next.js structure and conventions | Accepted |
+| [009](009-nextjs-conventions.md) | Next.js structure and conventions | Accepted; ESLint wording in rule 6 superseded by ADR-012 |
 | [010](010-postgres-data-layer.md) | Postgres adapter behind the search port | Accepted |
 | [011](011-local-first-delivery.md) | Local-first delivery, Podman, deployment at a gate | Accepted |
 | [012](012-oxc-lint-and-format.md) | Oxlint and Oxfmt for linting and formatting | Accepted |

@@ -115,14 +115,14 @@ Dependencies point inward: domain depends on nothing, and only `lib/ai` knows th
 
 ## Folder structure
 
-Target layout. Folders are created when they get content ([ADR-009](adr/009-nextjs-conventions.md) rule 2), so only `src/components/` (when a second route needs it) does not exist yet. Parts marked *proposal* go beyond ADR-009 and are confirmed in the plan of the phase that builds them.
+The layout as built. Folders are created when they get content ([ADR-009](adr/009-nextjs-conventions.md) rule 2), so only `src/components/` (when a second route needs it) does not exist.
 
 ```text
 boundless-tech-test/
 |-- .agents/skills/              task workflow skills (exists); .claude/skills links here
-|-- .github/workflows/ci.yml     typecheck, lint, unit, e2e, integration (Postgres service)
+|-- .github/workflows/ci.yml     jobs: check (typecheck, lint, format, unit, build), integration (Postgres service), e2e (mock provider)
 |-- db/migrations/               plain SQL migrations, applied by node-pg-migrate
-|-- docs/                        brief, adr, research, design, architecture, roadmap, TODO (exists)
+|-- docs/                        brief, adr, research, design, audits (Lighthouse baseline), architecture, roadmap, eval-results, TODO
 |-- e2e/                         Playwright: two happy-path specs, run by `pnpm e2e`
 |-- evals/                       cases, scorer and run script, on demand, real model (`pnpm eval`)
 |-- scripts/                     seed script, run with tsx
@@ -138,15 +138,17 @@ boundless-tech-test/
 |   |       |-- explain/route.ts
 |   |       `-- health/route.ts
 |   |-- components/              shared UI, only when a second route needs it
-|   |-- domain/                  pure: types, Zod schemas, SearchOffers port, estimateSavings, grounding check
+|   |-- domain/                  pure: types, Zod schemas, SearchOffers port, estimateSavings, grounding check, `api.ts` (request, response and error schemas shared by routes and client)
 |   |-- services/                interpretQuery, explainResults, findOffers (server-only)
 |   |-- lib/
-|   |   |-- ai/                  the only code that calls the model: client, mock, types, provider selection (server-only)
+|   |   |-- ai/                  the only code that calls the model: client, mock, canned mock answers, types, provider selection (server-only)
 |   |   |-- env.ts               the only reader of process.env
+|   |   |-- version.ts           the app version string, from env.ts
 |   |   `-- log.ts               the one-line JSON request log and the cost estimate
 |   `-- data/                    sample catalogue, adapters, adapter selection (server-only)
 |-- AGENTS.md, DESIGN.md, README.md
 |-- compose.yaml                 local Postgres for dev and integration tests (Podman or Docker)
+|-- netlify.toml                 secrets-scan settings for the optional Netlify deploy
 |-- .env.example                 dev-only values, no secrets
 `-- package.json, tsconfig.json, next.config.ts, oxlint and oxfmt config, vitest config, playwright config
 ```

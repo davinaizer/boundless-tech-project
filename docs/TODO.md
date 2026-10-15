@@ -95,7 +95,7 @@ Eval-only: nothing in the runtime or the routes depends on these. Done before Ph
 - [x] README: replace every *pending* marker (status, setup with both run paths: in-memory with the mock provider, and Postgres via Podman; trade-offs and improvements). Done 2026-10-15 together with the next item; setup commands run in a clean clone (in-memory with the mock, and migrate and seed on a fresh Postgres database); the recorded-demo marker stays until the demo exists
 - [x] "Context and assumptions" and "what I would do at the company" in the README
 - [ ] Record the demo (Loom or similar) from the local run, with the real model; this is the guaranteed deliverable
-- [ ] Check ADRs, architecture and the roadmap are current
+- [x] Check ADRs, architecture and the roadmap are current. Done 2026-10-15: checked paths, scripts, links, ADR status lines and counts against the tree; fixed the architecture folder tree and CI line, the roadmap version-string open point, the hours figure and a missing below-the-line row, and the ADR index status column. No accepted ADR was edited and no built behaviour contradicted one
 
 **Done when:** a new reader can set up, run and understand the decisions from the README.
 
