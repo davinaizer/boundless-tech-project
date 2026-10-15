@@ -6,7 +6,6 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 - [x] Scaffold Next.js (App Router), TypeScript strict, Tailwind
 - [x] Oxlint, Oxfmt ([ADR-012](adr/012-oxc-lint-and-format.md)), Vitest, `pnpm check` (typecheck, lint, format check, unit tests)
-- [ ] Playwright config and `pnpm e2e`, once there is a spec and the mock provider to run it against (split from the item above)
 - [x] GitHub Actions: `pnpm check` and `pnpm build` on push and pull request (first run green, about 28s, reported by the author; e2e job added with the Playwright item)
 - [x] `compose.yaml` for local Postgres with a fully qualified image; `pnpm db:up` and `db:down`; `.env.example` with dev-only values. Checked 2026-10-15 ([ADR-011](adr/011-local-first-delivery.md)): `podman compose` 6.1.3 delegates to the `docker-compose` 5.6.0 provider and works; Postgres 18 (`18.6`), the latest major on Docker Hub, chosen because no hosted option is selected yet. The Podman machine must be running (`podman machine start`)
 - [x] Add the plan, implement, review and complete task skills (adapted from an earlier project)
@@ -63,7 +62,7 @@ Phases are small and reversible. Each ends with a review gate before the next st
 
 ## Phase 4: e2e (0.5h)
 
-- [ ] Playwright: search happy path; edit-a-chip happy path
+- [ ] Playwright config, `pnpm e2e` and the CI e2e job (split from Phase 0: it needs a spec and the mock provider to run against); search happy path; edit-a-chip happy path
 
 **Done when:** e2e passes in CI against the in-memory adapter and the mock provider.
 
