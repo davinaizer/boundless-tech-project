@@ -9,7 +9,7 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | Not started. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Implementation | In progress: Phase 0 (scaffold, CI, tooling, health endpoint, version) done; Phase 1 (domain, search, data layer) under way. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
 | Recorded demo | Pending: link will be added here. A live deployment is optional ([ADR-011](docs/adr/011-local-first-delivery.md)) |
 
 This README describes the intended design. Sections marked *pending* are completed once the code exists.
@@ -113,17 +113,22 @@ Operational scope (observability, health check, versioning, OpenAPI, analytics) 
 ## Repository layout
 
 ```text
-AGENTS.md          working rules for contributors and AI agents
-DESIGN.md          visual theme (design tokens and rationale)
-compose.yaml       local Postgres for Podman or Docker (not yet created)
+AGENTS.md, CLAUDE.md   working rules (CLAUDE.md links to AGENTS.md)
+DESIGN.md              visual theme (design tokens and rationale)
 docs/
-  brief/           the challenge brief
-  adr/             decision records
-  research/        evidence behind the decisions
-  architecture.md  design and diagrams
-  roadmap.md       scope tiers, trade-offs, scalability
-  design/          UI mockups
-  TODO.md          plan, acceptance criteria, time log
-.agents/skills/    task workflow skills (.claude/skills links here)
-src/               application code (not yet created)
+  brief/ adr/ research/ design/    challenge brief, decisions, evidence, mockups
+  architecture.md, roadmap.md, TODO.md
+src/
+  app/                 pages and Route Handlers (health endpoint exists)
+  domain/              types, Zod schemas, SearchOffers port
+  lib/                 env.ts, version.ts; ai/ and log.ts planned
+  services/ data/ components/   planned
+db/migrations/ scripts/        SQL migrations, migrate and seed scripts (planned)
+e2e/ evals/                    Playwright specs, model eval (planned)
+.github/workflows/ci.yml       check and build
+compose.yaml, .env.example     local Postgres (Podman or Docker), dev-only values
+.agents/skills/                task workflow skills (.claude/skills links here)
+package.json and tool configs  Next.js, TypeScript, Vitest, Oxlint, Oxfmt
 ```
+
+The full target tree is in [docs/architecture.md](docs/architecture.md#folder-structure).
