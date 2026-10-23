@@ -69,27 +69,42 @@ export type GroundedLine = { offerId: string; text: string };
 
 export type Explanation = GroundedLine & { source: LineSource };
 
+// Which check rejected an answer, so a log line or the request inspector can say
+// why explain fell back. Names only: never the line, the text or an offer ID.
+export const GroundingRule = z.enum([
+  "invalid_shape",
+  "unknown_id",
+  "duplicate_id",
+  "empty_line",
+  "too_long",
+  "number_or_symbol",
+]);
+export type GroundingRule = z.infer<typeof GroundingRule>;
+
 // The grounding check on a model answer. The whole answer is rejected, not
 // trimmed, when any entry fails (ADR-002): an ID outside the offers that were
 // sent, a repeated ID, empty or over-long text, or any numeric character (any
 // script), "£" or "%" in the text (the model never states prices, savings or
 // terms; a deliberate heuristic that also rejects harmless text such as
 // "2-for-1", and misses spelled-out figures such as "half price"). An offer left without a
-// line is not a failure: the caller fills it with describeMatch.
+// line is not a failure: the caller fills it with describeMatch. A rejection names
+// the first rule broken.
 export function groundExplanations(
   raw: unknown,
   sentIds: readonly string[],
-): { ok: true; explanations: GroundedLine[] } | { ok: false } {
+): { ok: true; explanations: GroundedLine[] } | { ok: false; rule: GroundingRule } {
   const parsed = ModelExplanations.safeParse(raw);
-  if (!parsed.success) return { ok: false };
+  if (!parsed.success) return { ok: false, rule: "invalid_shape" };
   const allowed = new Set(sentIds);
   const seen = new Set<string>();
   const explanations: GroundedLine[] = [];
   for (const { offerId, text } of parsed.data.explanations) {
     const trimmed = text.trim();
-    if (!allowed.has(offerId) || seen.has(offerId)) return { ok: false };
-    if (trimmed === "" || trimmed.length > MAX_EXPLANATION_LENGTH) return { ok: false };
-    if (/[\p{N}£%]/u.test(trimmed)) return { ok: false };
+    if (!allowed.has(offerId)) return { ok: false, rule: "unknown_id" };
+    if (seen.has(offerId)) return { ok: false, rule: "duplicate_id" };
+    if (trimmed === "") return { ok: false, rule: "empty_line" };
+    if (trimmed.length > MAX_EXPLANATION_LENGTH) return { ok: false, rule: "too_long" };
+    if (/[\p{N}£%]/u.test(trimmed)) return { ok: false, rule: "number_or_symbol" };
     seen.add(offerId);
     explanations.push({ offerId, text: trimmed });
   }

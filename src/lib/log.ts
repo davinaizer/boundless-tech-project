@@ -43,6 +43,9 @@ export type RequestLog = {
   source?: string;
   // Why the model gave no usable answer, set only on fallback after a call.
   failure?: string;
+  // The grounding rule an explain answer broke, set only with failure "ungrounded".
+  // A rule name only: never the model's text, a line or an offer ID.
+  groundingRule?: string;
   // Class name of an unexpected error, for outcome "internal_error".
   errorName?: string;
 };

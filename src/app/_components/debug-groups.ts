@@ -89,6 +89,7 @@ type LogLine = {
   estimatedCostUsd?: number;
   source?: string;
   failure?: string;
+  groundingRule?: string;
 };
 const logOf = (entry: DebugEntry) => (entry.log ?? {}) as LogLine;
 
@@ -130,7 +131,11 @@ export function summariseGroup(
 export function badgeOf(entry: EntryState | undefined): string | undefined {
   if (entry === undefined || entry === "missing") return undefined;
   const log = logOf(entry);
-  if (log.source === "fallback") return log.failure ? `fallback · ${log.failure}` : "fallback";
+  if (log.source === "fallback") {
+    if (!log.failure) return "fallback";
+    const rule = log.groundingRule ? ` (${log.groundingRule})` : "";
+    return `fallback · ${log.failure}${rule}`;
+  }
   if (log.source === "llm" && (log.modelCalls ?? 0) > 1) return "retried";
   return undefined;
 }

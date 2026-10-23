@@ -136,6 +136,15 @@ describe("badgeOf", () => {
       "fallback · timeout",
     );
     expect(badgeOf(entry("r", { source: "fallback" }))).toBe("fallback");
+    expect(
+      badgeOf(
+        entry("r", {
+          source: "fallback",
+          failure: "ungrounded",
+          groundingRule: "number_or_symbol",
+        }),
+      ),
+    ).toBe("fallback · ungrounded (number_or_symbol)");
   });
 
   it("flags a retry that recovered, and nothing for a plain answer or search", () => {

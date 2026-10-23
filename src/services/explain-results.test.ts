@@ -118,6 +118,7 @@ describe("explainResults", () => {
     const ok = scripted(answer({ explanations: [{ offerId: one.id, text: "A London table." }] }));
     const lines = await explainResults(filters, [one.id], { ai: ok, offers: portWith([one]) });
     expect(lines).not.toHaveProperty("failure");
+    expect(lines).not.toHaveProperty("groundingRule");
     const none = await explainResults(filters, [], { ai: scripted(), offers: portWith([one]) });
     expect(none).not.toHaveProperty("failure");
   });
@@ -141,6 +142,7 @@ describe("explainResults", () => {
       modelCalls: 1,
       usage,
       failure: "ungrounded",
+      groundingRule: "unknown_id",
     });
     expect(ai.calls).toHaveLength(1);
   });
@@ -152,6 +154,7 @@ describe("explainResults", () => {
       expect(result.explanations).toEqual([fallback(one)]);
       expect(result.source).toBe("fallback");
       expect(result.failure).toBe("ungrounded");
+      expect(result.groundingRule).toBe("number_or_symbol");
     }
   });
 
@@ -187,7 +190,12 @@ describe("explainResults", () => {
   it("treats an answer with no lines as a failure", async () => {
     const ai = scripted(answer({ explanations: [] }));
     const result = await explainResults(filters, [one.id], { ai, offers: portWith([one]) });
-    expect(result).toMatchObject({ source: "fallback", modelCalls: 1, failure: "ungrounded" });
+    expect(result).toMatchObject({
+      source: "fallback",
+      modelCalls: 1,
+      failure: "ungrounded",
+      groundingRule: "no_lines",
+    });
     expect(result.explanations).toEqual([fallback(one)]);
   });
 

@@ -7,12 +7,17 @@ import {
   describeMatch,
   groundExplanations,
   type Explanation,
+  type GroundingRule,
 } from "@/domain/match-reasons";
 import type { SearchOffers } from "@/domain/search-offers";
 import { getAiClient, type AiClient, type ModelUsage, type StructuredFailure } from "@/lib/ai";
 
 // The model answered, but groundExplanations rejected the answer (or it had no lines).
 export type ExplainFailure = StructuredFailure | "ungrounded";
+
+// Why the answer was ungrounded: the rule it broke, or "no_lines" for a valid
+// answer with no lines in it.
+export type UngroundedRule = GroundingRule | "no_lines";
 
 export type Explanations = {
   explanations: Explanation[];
@@ -23,6 +28,8 @@ export type Explanations = {
   // Why the call gave no usable lines. Set only when source is "fallback" after a
   // model call; no call (no offers found) leaves it out.
   failure?: ExplainFailure;
+  // Set only with failure "ungrounded".
+  groundingRule?: UngroundedRule;
 };
 
 export type ExplainDeps = { ai?: AiClient; offers?: SearchOffers };
@@ -109,22 +116,21 @@ export async function explainResults(
     usage.inputTokens += result.usage.inputTokens;
     usage.outputTokens += result.usage.outputTokens;
   }
-  const failure: ExplainFailure = result.ok ? "ungrounded" : result.reason;
-  if (result.ok) {
-    const grounded = groundExplanations(
-      result.data,
-      offers.map((o) => o.id),
-    );
-    if (grounded.ok && grounded.explanations.length > 0) {
-      const lines = new Map(grounded.explanations.map((e) => [e.offerId, e.text]));
-      return { explanations: withFallback(lines), source: "llm", modelCalls: 1, usage };
-    }
-  }
-  return {
+  const fellBack = (failure: ExplainFailure, groundingRule?: UngroundedRule): Explanations => ({
     explanations: withFallback(new Map()),
     source: "fallback",
     modelCalls: 1,
     usage,
     failure,
-  };
+    ...(groundingRule && { groundingRule }),
+  });
+  if (!result.ok) return fellBack(result.reason);
+  const grounded = groundExplanations(
+    result.data,
+    offers.map((o) => o.id),
+  );
+  if (!grounded.ok) return fellBack("ungrounded", grounded.rule);
+  if (grounded.explanations.length === 0) return fellBack("ungrounded", "no_lines");
+  const lines = new Map(grounded.explanations.map((e) => [e.offerId, e.text]));
+  return { explanations: withFallback(lines), source: "llm", modelCalls: 1, usage };
 }

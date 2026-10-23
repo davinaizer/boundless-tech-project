@@ -62,6 +62,7 @@ export type Telemetry = {
   usage: { inputTokens: number; outputTokens: number };
   source?: "llm" | "fallback";
   failure?: string;
+  groundingRule?: string;
 };
 
 // The shared shell of every POST endpoint (ADR-009 rule 10): content type and
@@ -120,6 +121,7 @@ export async function handleJson<TBody, TResult>(
       estimatedCostUsd: estimateCostUsd(usage),
       ...(telemetry?.source ? { source: telemetry.source } : {}),
       ...(telemetry?.failure ? { failure: telemetry.failure } : {}),
+      ...(telemetry?.groundingRule ? { groundingRule: telemetry.groundingRule } : {}),
       ...(errorName ? { errorName } : {}),
     };
     logRequest(line);

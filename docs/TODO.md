@@ -155,13 +155,14 @@ Added 2026-10-23 at the developer's request. A collapsible panel at the bottom o
   - Seen in `pnpm dev`. `pnpm check` and `pnpm e2e` pass; no new dependency.
   - Built 2026-10-23, task note. `debug-entries.ts` (the record cache, 2 unit tests), `summariseGroup`, `badgeOf` and `timingSplit` in `debug-groups.ts` (8 more unit tests); `RequestsView.tsx` uses them, and its detail view now reads the cache instead of fetching on its own. `pnpm check` (317 unit tests) and `pnpm e2e` (16 tests) pass. Seen on the developer's running `next dev` server (real provider, so only searches with no model call, as in Task 3): two zero-result links gave headings "1 call · 18 ms · 0 model calls · 0 tokens · ≈ $0.00000" and the detail's timing line "model 0 ms · data 0 ms · other server 1 ms · network and browser 17 ms". Not seen in the browser: a badge, and totals with model calls, which need a model call; unit tests cover both.
 
-- [ ] **Task 5: why grounding rejected an answer (about 30 min).** Added 2026-10-23 at the developer's request.
+- [x] **Task 5: why grounding rejected an answer (about 30 min).** Added 2026-10-23 at the developer's request.
   - `groundExplanations` returns `{ ok: false, rule }` with `rule` one of `invalid_shape`, `unknown_id`, `duplicate_id`, `empty_line`, `too_long`, `number_or_symbol`. The rules themselves do not change ([ADR-002](adr/002-ai-boundary.md)); the domain stays pure. Evidence: one `match-reasons.test.ts` case per rule; passing cases unchanged.
   - `explainResults` passes `rule` on, with `no_lines` for a valid answer that has no lines; lines and fallback are unchanged. Evidence: `explain-results.test.ts`.
   - The request log line gains `groundingRule`, set only with `failure: "ungrounded"`: a fixed rule name, never model text, a line or an offer ID. Evidence: `api.test.ts`, including the existing check that no query text, filter values or error messages reach the log.
   - The inspector's badge reads `fallback · ungrounded (<rule>)`. Evidence: unit test of the badge text.
   - Docs: `architecture.md` (Operations and the explain paragraph). No ADR: the grounding rules are unchanged.
   - `pnpm check` and `pnpm e2e` pass; no new dependency.
+  - Built 2026-10-23, task note. `GroundingRule` (a Zod enum) and `{ ok: false, rule }` in `src/domain/match-reasons.ts`; the checks run in the same order, and the old combined checks are split only to name the rule (unknown before duplicate, empty before too long). `explainResults` returns `groundingRule` with `ungrounded` (and `no_lines`); the explain route passes it to the log line through `handleJson`; the inspector badge shows it. `pnpm check` (319 unit tests: the existing grounding and explain tests now assert the rule, plus two `api.test.ts` cases, one checking the model's text stays out of the log) and `pnpm e2e` pass. Not seen in the browser: the badge needs a real ungrounded answer; the mock's canned line always passes.
 
 **Done when:** a reader can open the panel on the deployed app and see the real model and database in use, and a developer running `pnpm dev` can inspect every request without any query text reaching a production log or response.
 
