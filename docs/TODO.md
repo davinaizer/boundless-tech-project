@@ -204,7 +204,7 @@ Analytics, API versioning, tracing and dashboards, readiness checks that call th
 | 4 | 0h40 | 14 min (recorded by the author) |
 | 4.1 (optional) | 0.75h | |
 | 5 | 1h | |
-| 5.1 (optional) | 2.5h | |
+| 5.1 (optional) | 2.5h | 16 min (recorded by the author) |
 | 6 (optional) | 0.75h | |
 
 Planned total, phases 0 to 5 without the optional 4.1, is about 12h. The first plan was 8h. Phase 2.1 added about 50 minutes. The roadmap additions added about 45 minutes, ADR-010 and ADR-011 added about 1h20 net (the Postgres adapter and container about 2h, less the Netlify spike and the rate limit moved to Phase 6), the model timeout and error shape added about 25 minutes, and the phase checkpoints for phases 1 to 4 added about 40 minutes. All figures are estimates, not measurements. Slides are outside this total. The ADR-009 items added to phases 0, 2 and 3 are small and not re-estimated (an unmeasured guess is about 15 minutes in total).
