@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { DebugEntry } from "@/domain/api";
 import { debugEntryRequest, isAbort } from "./api-client";
+import { groupCalls, parseIfJson } from "./debug-groups";
 import {
   debugLogServerSnapshot,
   debugLogSnapshot,
@@ -63,17 +64,22 @@ function ServerDetail({ requestId }: { requestId: string }) {
       {entry.calls.length === 0 && <p className="mt-2 text-muted">No model or data calls.</p>}
       {entry.calls.map((call, index) =>
         call.kind === "model" ? (
-          <Block
-            key={index}
-            label={`Model call ${index + 1}: ${call.ok ? "ok" : "failed"}, ${call.ms} ms, ${call.inputTokens} in / ${call.outputTokens} out${call.error ? `, threw ${call.error}` : ""}`}
-            value={{ prompt: call.prompt, reply: call.reply }}
-          />
+          <div key={index} className="mt-3">
+            <p className="font-bold">
+              Model call {index + 1}: {call.ok ? "ok" : "failed"}, {call.ms} ms, {call.inputTokens}{" "}
+              in / {call.outputTokens} out{call.error ? `, threw ${call.error}` : ""}
+            </p>
+            <Block label="Prompt" value={parseIfJson(call.prompt)} />
+            <Block label="Reply" value={parseIfJson(call.reply)} />
+          </div>
         ) : (
-          <Block
-            key={index}
-            label={`Data call ${index + 1}: ${call.method}, ${call.rows} rows, ${call.ms} ms${call.error ? `, threw ${call.error}` : ""}`}
-            value={call.input}
-          />
+          <div key={index} className="mt-3">
+            <p className="font-bold">
+              Data call {index + 1}: {call.method}, {call.rows} rows, {call.ms} ms
+              {call.error ? `, threw ${call.error}` : ""}
+            </p>
+            <Block label="Input" value={parseIfJson(call.input)} />
+          </div>
         ),
       )}
     </>
@@ -89,25 +95,35 @@ export function RequestsView() {
   }
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-      <ul className="flex flex-col gap-1">
-        {calls.map((call, index) => (
-          <li key={`${call.requestId ?? "none"}-${index}`}>
-            <button
-              type="button"
-              aria-pressed={selected === call}
-              onClick={() => setSelected(call)}
-              className={`grid w-full grid-cols-[1fr_auto_auto_auto] gap-3 rounded-tile px-3 py-1 text-left ${
-                selected === call ? "bg-blue text-white" : "bg-white"
-              }`}
-            >
-              <span>{call.path.replace("/api/", "")}</span>
-              <span>{call.status ?? "no answer"}</span>
-              <span>{call.ms} ms</span>
-              <span>{sourceOf(call)}</span>
-            </button>
-          </li>
+      <div className="flex flex-col gap-3">
+        {groupCalls(calls).map((group) => (
+          <section key={`${group.calls[0]!.requestId ?? "none"}-${group.label}`}>
+            <h3 className="font-heading text-base font-bold break-words text-ink">{group.label}</h3>
+            <p className="text-sm text-muted">
+              {group.calls.length} {group.calls.length === 1 ? "call" : "calls"}, {group.totalMs} ms
+            </p>
+            <ul className="mt-1 flex flex-col gap-1">
+              {group.calls.map((call, index) => (
+                <li key={`${call.requestId ?? "none"}-${index}`}>
+                  <button
+                    type="button"
+                    aria-pressed={selected === call}
+                    onClick={() => setSelected(call)}
+                    className={`grid w-full grid-cols-[1fr_auto_auto_auto] gap-3 rounded-tile px-3 py-1 text-left ${
+                      selected === call ? "bg-blue text-white" : "bg-white"
+                    }`}
+                  >
+                    <span>{call.path.replace("/api/", "")}</span>
+                    <span>{call.status ?? "no answer"}</span>
+                    <span>{call.ms} ms</span>
+                    <span>{sourceOf(call)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
       <div>
         {selected === null ? (
           <p className="text-muted">Select a request to see its bodies and calls.</p>
