@@ -105,11 +105,11 @@ sequenceDiagram
 | Layer | Responsibility | Depends on |
 |---|---|---|
 | UI (`src/app`) | Input, chips, results, savings, loading, empty and error states | API contracts only |
-| Route Handlers (`src/app/api`) | Validate input, orchestrate, shape responses | services |
+| Route Handlers (`src/app/api`) | Validate input, orchestrate, shape responses | services, and `lib` for env, log, rate limit and the debug store |
 | Services (`src/services`) | `interpretQuery`, `explainResults`, `findOffers` (calls the `SearchOffers` port), `describeRuntime` (the AI provider and model and the data adapter in use, for the log and `/api/health`) | domain, `lib/ai`, and `data` only for the adapter-selection entry point (`@/data`) |
 | Domain (`src/domain`) | Types, Zod schemas, the `SearchOffers` port (an interface only), `estimateSavings`, grounding check. Pure | nothing |
-| AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK |
-| Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain, `lib/env` (adapter selection reads `DATABASE_URL`) |
+| AI client (`src/lib/ai`) | The only module that calls the model; mock provider for tests | provider SDK, `lib/env`, `lib/debug-store` (records calls in development, [ADR-017](adr/017-development-request-inspector.md)) |
+| Data (`src/data`) | Fictional sample catalogue and the adapters that implement the port (Postgres, in-memory), plus the one place that picks an adapter from the environment | domain, `lib/env` (adapter selection reads `DATABASE_URL`), `lib/debug-store` (records calls in development, [ADR-017](adr/017-development-request-inspector.md)) |
 
 Dependencies point inward: domain depends on nothing, and only `lib/ai` knows the provider. Next.js-specific conventions (server-only modules, env access, route states) are in [ADR-009](adr/009-nextjs-conventions.md); the import boundaries above are enforced by Oxlint.
 
@@ -136,7 +136,8 @@ boundless-tech-test/
 |   |       |-- interpret/route.ts
 |   |       |-- search/route.ts
 |   |       |-- explain/route.ts
-|   |       `-- health/route.ts
+|   |       |-- health/route.ts
+|   |       `-- debug/[requestId]/route.ts   development only (ADR-017)
 |   |-- components/              shared UI, only when a second route needs it
 |   |-- domain/                  pure: types, Zod schemas, SearchOffers port, estimateSavings, grounding check, `api.ts` (request, response and error schemas shared by routes and client)
 |   |-- services/                interpretQuery, explainResults, findOffers, describeRuntime (server-only)
@@ -144,7 +145,8 @@ boundless-tech-test/
 |   |   |-- ai/                  the only code that calls the model: client, mock, canned mock answers, types, provider selection (server-only)
 |   |   |-- env.ts               the only reader of process.env
 |   |   |-- version.ts           the app version string, from env.ts
-|   |   `-- log.ts               the one-line JSON request log and the cost estimate
+|   |   |-- log.ts               the one-line JSON request log, the one-time runtime line and the cost estimate
+|   |   `-- debug-store.ts       the development request inspector's buffer (ADR-017)
 |   `-- data/                    sample catalogue, adapters, adapter selection (server-only)
 |-- AGENTS.md, DESIGN.md, README.md
 |-- compose.yaml                 local Postgres for dev and integration tests (Podman or Docker)
@@ -245,11 +247,12 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 | `POST /api/interpret` | `{ query }` | `{ filters, source: "llm" or "fallback" }` | Yes (1, or 2 with the retry) |
 | `POST /api/search` | `{ filters }` | `{ offers, savings }` | No |
 | `POST /api/explain` | `{ filters, offerIds }` | `{ explanations: [{ offerId, text, source }] }`, `source` is `llm` or `fallback` per line | Yes (1) |
-| `GET /api/health` | none | `{ status: "ok", version, ai: { provider, model }, data: { adapter } }` | No |
+| `GET /api/health` | none | `{ status: "ok", version, ai: { provider, model }, data: { adapter }, debug }`, plus `config` (timeout, rate limit, whether a key is set) when `debug` is true | No |
+| `GET /api/debug/[requestId]` | none | Development only: one recorded request (bodies, log line, model and data calls). 404 otherwise | No |
 
 `/api/explain` takes offer IDs, not offer data. The server reloads the offers from the port, so the client cannot inject content into the prompt.
 
-**Operations.** Each request to the three POST endpoints writes one JSON log line (`GET /api/health` writes none: it is a smoke-test target with no model work): event, request ID, endpoint, status, outcome, latency, model calls, token counts, estimated cost in USD, `source`, the failure reason on fallback, the class name of an unexpected error, `PROMPT_VERSION`, the app version and `provider`, `model` and `adapter` (what served the request: `source: llm` alone does not tell the real model from the mock). The first request of a process also writes one `runtime` line with those, `nodeEnv`, the timeout, the rate limit and whether a key is set (a boolean, never the key). Written by `handleJson` on every exit path, so rejected requests are logged too. The cost is an estimate from the Haiku 5.5 prices in ADR-005 (`src/lib/log.ts`), not billing. Query text, filter values and error messages are never logged. The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`, which also names the provider, model and adapter from `env` (no model call, no connection). A collapsed bar at the bottom of the page (`DebugPanel.tsx`, a client leaf) fetches `/api/health` on load and shows them as badges, green for the real service and amber for the mock or the in-memory adapter, so it reports the running server, not the build of the static page ([ADR-016](adr/016-expose-runtime-config.md)). Scope tiers and trade-offs: [roadmap](roadmap.md).
+**Operations.** Each request to the three POST endpoints writes one JSON log line (`GET /api/health` writes none: it is a smoke-test target with no model work): event, request ID, endpoint, status, outcome, latency, model calls, token counts, estimated cost in USD, `source`, the failure reason on fallback, the class name of an unexpected error, `PROMPT_VERSION`, the app version and `provider`, `model` and `adapter` (what served the request: `source: llm` alone does not tell the real model from the mock). The first request of a process also writes one `runtime` line with those, `nodeEnv`, the timeout, the rate limit and whether a key is set (a boolean, never the key). Written by `handleJson` on every exit path, so rejected requests are logged too. The cost is an estimate from the Haiku 5.5 prices in ADR-005 (`src/lib/log.ts`), not billing. Query text, filter values and error messages are never logged. Under `next dev` only, a request inspector keeps the last 20 requests in memory (bodies, log line, each model call's prompt and parsed reply, each data call) for the bar's Requests tab and `GET /api/debug/[requestId]`; it writes nothing to stdout and is off in production by code, not by a flag ([ADR-017](adr/017-development-request-inspector.md)). The app version (`v<package>+<build>.<short sha>`) is shown in the UI footer and returned by `/api/health`, which also names the provider, model and adapter from `env` (no model call, no connection). A collapsed bar at the bottom of the page (`DebugPanel.tsx`, a client leaf) fetches `/api/health` on load and shows them as badges, green for the real service and amber for the mock or the in-memory adapter, so it reports the running server, not the build of the static page ([ADR-016](adr/016-expose-runtime-config.md)). Scope tiers and trade-offs: [roadmap](roadmap.md).
 
 **Errors and request checks.** Route Handlers reject a wrong content type or an oversized body before parsing (the limit is set in config, a heuristic), then validate with Zod. Every endpoint returns the same error shape for invalid requests and unexpected server errors: `{ error: { code, message, requestId } }` with an HTTP status. Messages are safe to show and carry no internals; `code` comes from a small closed set defined in `src/domain/api.ts`: `invalid_request` (400), `unsupported_media_type` (415), `payload_too_large` (413), `rate_limited` (429, with a `Retry-After` header) and `internal_error` (500). The shared handler shell (`src/app/api/_lib/handle-json.ts`) checks the content type and reads the body with a byte limit (`MAX_BODY_BYTES`, default 4096, a heuristic) before parsing, caps `query` at `MAX_QUERY_CHARS` (default 200, ADR-006) and `offerIds` at 10 (over-long lists are rejected, not truncated), validates the response with Zod, and returns an `x-request-id` header with the same ID. A model failure is not an error response: it triggers the fallback described below, and `/api/interpret` reports `source: "fallback"`.
 

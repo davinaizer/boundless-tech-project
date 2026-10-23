@@ -1,4 +1,5 @@
 import "server-only";
+import { cut, isDebugEnabled, recordCall } from "@/lib/debug-store";
 import { env } from "@/lib/env";
 import { cannedResponder } from "./canned";
 import { MODEL, createAnthropicClient, createAnthropicSdk } from "./client";
@@ -22,12 +23,50 @@ function createAiClient(): AiClient {
   });
 }
 
+// In development each call is recorded for the request inspector (ADR-017).
+// Results and errors pass through unchanged.
+function withDebug(client: AiClient): AiClient {
+  return {
+    async generateStructured(request) {
+      const started = performance.now();
+      const ms = () => Math.round(performance.now() - started);
+      const prompt = cut(request.prompt);
+      try {
+        const result = await client.generateStructured(request);
+        recordCall({
+          kind: "model",
+          ms: ms(),
+          prompt,
+          ok: result.ok,
+          reply: result.ok ? cut(result.data) : result.reason,
+          inputTokens: result.usage?.inputTokens ?? 0,
+          outputTokens: result.usage?.outputTokens ?? 0,
+        });
+        return result;
+      } catch (error) {
+        const name = error instanceof Error ? error.name : "unknown";
+        recordCall({
+          kind: "model",
+          ms: ms(),
+          prompt,
+          ok: false,
+          reply: "",
+          inputTokens: 0,
+          outputTokens: 0,
+          error: name,
+        });
+        throw error;
+      }
+    },
+  };
+}
+
 let aiClient: AiClient | undefined;
 
 // The one place a provider is chosen (ADR-007): the mock unless AI_PROVIDER is
 // "anthropic". Built on first use and reused.
 export function getAiClient(): AiClient {
-  aiClient ??= createAiClient();
+  aiClient ??= isDebugEnabled() ? withDebug(createAiClient()) : createAiClient();
   return aiClient;
 }
 

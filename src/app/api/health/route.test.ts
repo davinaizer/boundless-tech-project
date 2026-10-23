@@ -15,6 +15,7 @@ describe("GET /api/health", () => {
       version: "v0.0.0+test",
       ai: { provider: "mock", model: "none" },
       data: { adapter: "in-memory" },
+      debug: false,
     });
     expect(HealthResponse.safeParse(body).success).toBe(true);
   });

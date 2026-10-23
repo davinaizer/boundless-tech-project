@@ -32,3 +32,4 @@ Write an ADR when a decision is hard to reverse or shapes the design (idea, AI b
 | [014](014-filters-in-the-url.md) | Filters in the URL, read on the client | Accepted |
 | [015](015-demo-recorded-after-deploy.md) | Record the demo after the optional deploy, Phase 6 time-boxed | Accepted |
 | [016](016-expose-runtime-config.md) | Show the AI provider, model and data adapter publicly | Accepted |
+| [017](017-development-request-inspector.md) | A development-only request inspector that shows query text | Accepted |

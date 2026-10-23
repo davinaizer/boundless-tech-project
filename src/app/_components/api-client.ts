@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import {
   ApiError,
+  DebugEntry,
   ExplainResponse,
   HealthResponse,
   InterpretResponse,
@@ -8,6 +9,7 @@ import {
   type ApiErrorCode,
 } from "@/domain/api";
 import type { Filters } from "@/domain/filters";
+import { recordClientCall } from "./debug-log";
 
 export type ClientErrorCode = ApiErrorCode | "network" | "bad_response";
 
@@ -33,26 +35,44 @@ export const errorMessage = (code: ClientErrorCode) => MESSAGES[code];
 export const isAbort = (error: unknown) =>
   error instanceof DOMException && error.name === "AbortError";
 
+// `debugBody` is the request body to show in the debug bar; the health call,
+// which feeds the bar, passes none and is not recorded.
 async function call<T>(
   path: string,
   init: RequestInit,
   schema: z.ZodType<T>,
   signal: AbortSignal,
+  debugBody?: unknown,
 ): Promise<T> {
-  let response: Response;
+  const started = performance.now();
+  let response: Response | undefined;
+  let json: unknown;
+  const record = () => {
+    if (debugBody === undefined) return;
+    recordClientCall({
+      path,
+      requestBody: debugBody,
+      status: response?.status ?? null,
+      ms: Math.round(performance.now() - started),
+      responseBody: json,
+      requestId: response?.headers.get("x-request-id") ?? null,
+    });
+  };
   try {
     response = await fetch(path, { ...init, signal });
   } catch (error) {
     if (isAbort(error)) throw error;
+    record();
     throw new ApiRequestError("network");
   }
-  let json: unknown;
   try {
     json = await response.json();
   } catch (error) {
     if (isAbort(error)) throw error;
+    record();
     throw new ApiRequestError("bad_response");
   }
+  record();
   if (!response.ok) {
     const parsed = ApiError.safeParse(json);
     throw new ApiRequestError(parsed.success ? parsed.data.error.code : "bad_response");
@@ -72,6 +92,7 @@ const post = <T>(path: string, body: unknown, schema: z.ZodType<T>, signal: Abor
     },
     schema,
     signal,
+    body,
   );
 
 export const interpretRequest = (query: string, signal: AbortSignal) =>
@@ -85,3 +106,7 @@ export const explainRequest = (filters: Filters, offerIds: string[], signal: Abo
 
 export const healthRequest = (signal: AbortSignal) =>
   call("/api/health", { method: "GET" }, HealthResponse, signal);
+
+// Development only: the server's record of one request (ADR-017).
+export const debugEntryRequest = (requestId: string, signal: AbortSignal) =>
+  call(`/api/debug/${encodeURIComponent(requestId)}`, { method: "GET" }, DebugEntry, signal);

@@ -38,8 +38,55 @@ export const HealthResponse = z.strictObject({
   version: z.string().min(1),
   ai: z.strictObject({ provider: z.enum(["anthropic", "mock"]), model: z.string().min(1) }),
   data: z.strictObject({ adapter: z.enum(["postgres", "in-memory"]) }),
+  // True only under `next dev`: the request inspector is on (ADR-017).
+  debug: z.boolean(),
+  // Sent only when `debug` is true; never the key, only whether one is set.
+  config: z
+    .strictObject({
+      aiTimeoutMs: z.number(),
+      rateLimitPerMinute: z.number(),
+      apiKeyPresent: z.boolean(),
+    })
+    .optional(),
 });
 export type HealthResponse = z.infer<typeof HealthResponse>;
+
+// One model or data call made while serving a request, recorded in development
+// only (ADR-017). Text fields are cut to a fixed length on the server.
+export const DebugCall = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("model"),
+    ms: z.number(),
+    prompt: z.string(),
+    ok: z.boolean(),
+    // The parsed JSON the client returned, or the failure reason.
+    reply: z.string(),
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    error: z.string().optional(),
+  }),
+  z.strictObject({
+    kind: z.literal("data"),
+    ms: z.number(),
+    method: z.enum(["search", "getByIds"]),
+    input: z.string(),
+    rows: z.number(),
+    error: z.string().optional(),
+  }),
+]);
+export type DebugCall = z.infer<typeof DebugCall>;
+
+// What GET /api/debug/[requestId] returns in development.
+export const DebugEntry = z.strictObject({
+  requestId: z.string(),
+  endpoint: z.string(),
+  at: z.string(),
+  request: z.string().optional(),
+  response: z.string().optional(),
+  log: z.record(z.string(), z.unknown()).optional(),
+  calls: z.array(DebugCall),
+});
+export type DebugEntry = z.infer<typeof DebugEntry>;
 
 // `query` is capped by the route from configuration (ADR-006), so the schema
 // takes the limit rather than fixing it here.

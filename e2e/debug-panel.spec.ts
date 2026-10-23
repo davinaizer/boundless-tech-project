@@ -52,9 +52,30 @@ for (const width of [320, 1280]) {
 
 test("/api/health names the running server's provider and adapter", async ({ request }) => {
   const response = await request.get("/api/health");
-  expect(await response.json()).toMatchObject({
+  const body = (await response.json()) as Record<string, unknown>;
+  expect(body).toMatchObject({
     status: "ok",
     ai: { provider: "mock", model: "none" },
     data: { adapter: "in-memory" },
+    debug: false,
   });
+  expect(body).not.toHaveProperty("config");
+});
+
+// The e2e run is a production build, where the request inspector is off (ADR-017).
+test("a production build has no Requests tab and serves no request record", async ({ page }) => {
+  const interpret = page.waitForResponse("**/api/interpret");
+  await search(page);
+  const requestId = (await interpret).headers()["x-request-id"];
+  expect(requestId).toBeTruthy();
+
+  const bar = page.getByRole("region", { name: "Runtime" });
+  await bar.getByRole("button", { name: /Debug/ }).click();
+  await expect(bar.getByText("AI provider")).toBeVisible();
+  await expect(bar.getByRole("tab")).toHaveCount(0);
+  await expect(bar.getByText("Requests")).toHaveCount(0);
+
+  const record = await page.request.get(`/api/debug/${requestId}`);
+  expect(record.status()).toBe(404);
+  expect(await record.text()).toBe("");
 });

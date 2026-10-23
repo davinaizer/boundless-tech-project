@@ -3,6 +3,7 @@ import type { z } from "zod";
 import { API_ERROR_STATUS, type ApiError, type ApiErrorCode } from "@/domain/api";
 import { env } from "@/lib/env";
 import { estimateCostUsd, logRequest, logRuntimeOnce, type RequestLog } from "@/lib/log";
+import { cut, noteRequest, withRequest } from "@/lib/debug-store";
 import { clientKey, type RateLimiter } from "@/lib/rate-limit";
 import { APP_VERSION } from "@/lib/version";
 import { PROMPT_VERSION } from "@/services/prompt-version";
@@ -22,6 +23,7 @@ function errorResponse(
   headers: Record<string, string> = {},
 ): Response {
   const body: ApiError = { error: { code, message: MESSAGES[code], requestId } };
+  noteRequest({ response: cut(body) });
   return Response.json(body, {
     status: API_ERROR_STATUS[code],
     headers: { "x-request-id": requestId, ...headers },
@@ -101,7 +103,7 @@ export async function handleJson<TBody, TResult>(
     errorName?: string,
   ): Response => {
     const usage = telemetry?.usage ?? { inputTokens: 0, outputTokens: 0 };
-    logRequest({
+    const line: RequestLog = {
       requestId,
       endpoint: options.endpoint,
       status: response.status,
@@ -119,52 +121,59 @@ export async function handleJson<TBody, TResult>(
       ...(telemetry?.source ? { source: telemetry.source } : {}),
       ...(telemetry?.failure ? { failure: telemetry.failure } : {}),
       ...(errorName ? { errorName } : {}),
-    });
+    };
+    logRequest(line);
+    noteRequest({ log: line });
     return response;
   };
 
-  try {
-    const verdict = options.rateLimit?.check(clientKey(request.headers));
-    if (verdict !== undefined && !verdict.allowed) {
+  // In development the request becomes an entry of the inspector (ADR-017).
+  return withRequest(requestId, options.endpoint, async () => {
+    try {
+      const verdict = options.rateLimit?.check(clientKey(request.headers));
+      if (verdict !== undefined && !verdict.allowed) {
+        return finish(
+          errorResponse("rate_limited", requestId, {
+            "retry-after": String(verdict.retryAfterSeconds),
+          }),
+          "rate_limited",
+        );
+      }
+      if (!isJson(request.headers.get("content-type"))) {
+        return finish(errorResponse("unsupported_media_type", requestId), "unsupported_media_type");
+      }
+      let text: string;
+      try {
+        text = await readText(request, env.MAX_BODY_BYTES);
+      } catch (error) {
+        if (error instanceof PayloadTooLarge) {
+          return finish(errorResponse("payload_too_large", requestId), "payload_too_large");
+        }
+        throw error;
+      }
+      noteRequest({ request: cut(text) });
+      let json: unknown;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        return finish(errorResponse("invalid_request", requestId), "invalid_request");
+      }
+      const body = options.body.safeParse(json);
+      if (!body.success)
+        return finish(errorResponse("invalid_request", requestId), "invalid_request");
+
+      const run = await options.run(body.data);
+      telemetry = run.telemetry;
+      const result = options.result.parse(run.body);
+      noteRequest({ response: cut(result) });
+      return finish(Response.json(result, { headers: { "x-request-id": requestId } }), "ok");
+    } catch (error) {
+      // Nothing from the cause reaches the client or the log but its class name.
       return finish(
-        errorResponse("rate_limited", requestId, {
-          "retry-after": String(verdict.retryAfterSeconds),
-        }),
-        "rate_limited",
+        errorResponse("internal_error", requestId),
+        "internal_error",
+        error instanceof Error ? error.name : "unknown",
       );
     }
-    if (!isJson(request.headers.get("content-type"))) {
-      return finish(errorResponse("unsupported_media_type", requestId), "unsupported_media_type");
-    }
-    let text: string;
-    try {
-      text = await readText(request, env.MAX_BODY_BYTES);
-    } catch (error) {
-      if (error instanceof PayloadTooLarge) {
-        return finish(errorResponse("payload_too_large", requestId), "payload_too_large");
-      }
-      throw error;
-    }
-    let json: unknown;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      return finish(errorResponse("invalid_request", requestId), "invalid_request");
-    }
-    const body = options.body.safeParse(json);
-    if (!body.success)
-      return finish(errorResponse("invalid_request", requestId), "invalid_request");
-
-    const run = await options.run(body.data);
-    telemetry = run.telemetry;
-    const result = options.result.parse(run.body);
-    return finish(Response.json(result, { headers: { "x-request-id": requestId } }), "ok");
-  } catch (error) {
-    // Nothing from the cause reaches the client or the log but its class name.
-    return finish(
-      errorResponse("internal_error", requestId),
-      "internal_error",
-      error instanceof Error ? error.name : "unknown",
-    );
-  }
+  });
 }
