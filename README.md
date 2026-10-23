@@ -92,6 +92,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [013](docs/adr/013-ai-generated-sample-data.md) | Fictional sample catalogue generated once, offline, from a committed spec |
 | [014](docs/adr/014-filters-in-the-url.md) | Filters in the URL, read on the client, so the page stays static |
 | [015](docs/adr/015-demo-recorded-after-deploy.md) | Demo recorded after the optional deploy, Phase 6 time-boxed to 1.5 hours |
+| [016](docs/adr/016-expose-runtime-config.md) | AI provider, model and data adapter shown on `/api/health` and in a collapsed bar at the bottom of the page |
 
 ## Evidence and assumptions
 
@@ -188,7 +189,7 @@ docs/
   brief/ adr/ research/ design/    challenge brief, decisions, evidence, mockups
   architecture.md, roadmap.md, TODO.md
 src/
-  app/                 the finder page, `_components/`, and Route Handlers (`/api/interpret`, `search`, `explain`, `health`)
+  app/                 the finder page, `_components/` (including the runtime bar), and Route Handlers (`/api/interpret`, `search`, `explain`, `health`)
   domain/              types, Zod schemas, SearchOffers port, estimateSavings
   lib/                 env.ts, version.ts, ai/ (model client and mock), log.ts
   data/                sample catalogue, in-memory and Postgres adapters

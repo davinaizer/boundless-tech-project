@@ -21,3 +21,16 @@ describe("getAiClient", () => {
     expect(getAiClient()).not.toHaveProperty("calls");
   });
 });
+
+describe("describeAi", () => {
+  it("describes the mock, with no model", async () => {
+    const { describeAi } = await import("./index");
+    expect(describeAi()).toEqual({ provider: "mock", model: "none" });
+  });
+
+  it("describes the Anthropic provider and its model, and builds no client", async () => {
+    vi.doMock("@/lib/env", () => ({ env: { AI_PROVIDER: "anthropic" } }));
+    const { describeAi } = await import("./index");
+    expect(describeAi()).toEqual({ provider: "anthropic", model: "claude-haiku-5-5" });
+  });
+});

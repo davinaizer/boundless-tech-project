@@ -2,10 +2,11 @@ import "server-only";
 import type { z } from "zod";
 import { API_ERROR_STATUS, type ApiError, type ApiErrorCode } from "@/domain/api";
 import { env } from "@/lib/env";
-import { estimateCostUsd, logRequest, type RequestLog } from "@/lib/log";
+import { estimateCostUsd, logRequest, logRuntimeOnce, type RequestLog } from "@/lib/log";
 import { clientKey, type RateLimiter } from "@/lib/rate-limit";
 import { APP_VERSION } from "@/lib/version";
 import { PROMPT_VERSION } from "@/services/prompt-version";
+import { describeRuntime } from "@/services/runtime-info";
 
 const MESSAGES: Record<ApiErrorCode, string> = {
   invalid_request: "The request is not valid.",
@@ -81,6 +82,18 @@ export async function handleJson<TBody, TResult>(
   const requestId = crypto.randomUUID();
   const started = performance.now();
   let telemetry: Telemetry | undefined;
+  const { ai, data } = describeRuntime();
+  const adapter = data.adapter;
+  logRuntimeOnce(() => ({
+    ...ai,
+    adapter,
+    nodeEnv: env.NODE_ENV,
+    appVersion: APP_VERSION,
+    promptVersion: PROMPT_VERSION,
+    aiTimeoutMs: env.AI_TIMEOUT_MS,
+    rateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
+    apiKeyPresent: env.ANTHROPIC_API_KEY !== undefined,
+  }));
 
   const finish = (
     response: Response,
@@ -96,6 +109,9 @@ export async function handleJson<TBody, TResult>(
       latencyMs: Math.round(performance.now() - started),
       promptVersion: PROMPT_VERSION,
       appVersion: APP_VERSION,
+      provider: ai.provider,
+      model: ai.model,
+      adapter,
       modelCalls: telemetry?.modelCalls ?? 0,
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,

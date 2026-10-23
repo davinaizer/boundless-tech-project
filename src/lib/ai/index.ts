@@ -1,7 +1,7 @@
 import "server-only";
 import { env } from "@/lib/env";
 import { cannedResponder } from "./canned";
-import { createAnthropicClient, createAnthropicSdk } from "./client";
+import { MODEL, createAnthropicClient, createAnthropicSdk } from "./client";
 import { createMockAiClient } from "./mock";
 import type { AiClient } from "./types";
 
@@ -29,4 +29,12 @@ let aiClient: AiClient | undefined;
 export function getAiClient(): AiClient {
   aiClient ??= createAiClient();
   return aiClient;
+}
+
+// What the running server uses, for the log and the health check. Read from env
+// only: it builds no client, so asking never costs a call.
+export function describeAi(): { provider: "anthropic" | "mock"; model: string } {
+  return env.AI_PROVIDER === "anthropic"
+    ? { provider: "anthropic", model: MODEL }
+    : { provider: "mock", model: "none" };
 }

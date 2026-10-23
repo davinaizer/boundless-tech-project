@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Filters } from "@/domain/filters";
-import { getSearchOffers } from "./index";
+import { describeData, getSearchOffers } from "./index";
 import { CATALOGUE_OFFERS, SAMPLE_OFFERS } from "./sample-catalogue";
 
 describe("getSearchOffers", () => {
@@ -22,5 +22,22 @@ describe("getSearchOffers", () => {
   it("looks offers up by id from the same catalogue", async () => {
     const [first] = SAMPLE_OFFERS;
     expect(await getSearchOffers().getByIds([first!.id])).toEqual([first]);
+  });
+});
+
+describe("describeData", () => {
+  afterEach(() => {
+    vi.doUnmock("@/lib/env");
+    vi.resetModules();
+  });
+
+  it("reports the in-memory adapter when DATABASE_URL is unset", () => {
+    expect(describeData()).toEqual({ adapter: "in-memory" });
+  });
+
+  it("reports postgres when DATABASE_URL is set, without opening a connection", async () => {
+    vi.doMock("@/lib/env", () => ({ env: { DATABASE_URL: "postgres://u:p@127.0.0.1:1/db" } }));
+    const { describeData: describe } = await import("./index");
+    expect(describe()).toEqual({ adapter: "postgres" });
   });
 });

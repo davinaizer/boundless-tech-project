@@ -2,6 +2,7 @@ import type { z } from "zod";
 import {
   ApiError,
   ExplainResponse,
+  HealthResponse,
   InterpretResponse,
   SearchResponse,
   type ApiErrorCode,
@@ -32,20 +33,15 @@ export const errorMessage = (code: ClientErrorCode) => MESSAGES[code];
 export const isAbort = (error: unknown) =>
   error instanceof DOMException && error.name === "AbortError";
 
-async function post<T>(
+async function call<T>(
   path: string,
-  body: unknown,
+  init: RequestInit,
   schema: z.ZodType<T>,
   signal: AbortSignal,
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
+    response = await fetch(path, { ...init, signal });
   } catch (error) {
     if (isAbort(error)) throw error;
     throw new ApiRequestError("network");
@@ -66,6 +62,18 @@ async function post<T>(
   return parsed.data;
 }
 
+const post = <T>(path: string, body: unknown, schema: z.ZodType<T>, signal: AbortSignal) =>
+  call(
+    path,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    schema,
+    signal,
+  );
+
 export const interpretRequest = (query: string, signal: AbortSignal) =>
   post("/api/interpret", { query }, InterpretResponse, signal);
 
@@ -74,3 +82,6 @@ export const searchRequest = (filters: Filters, signal: AbortSignal) =>
 
 export const explainRequest = (filters: Filters, offerIds: string[], signal: AbortSignal) =>
   post("/api/explain", { filters, offerIds }, ExplainResponse, signal);
+
+export const healthRequest = (signal: AbortSignal) =>
+  call("/api/health", { method: "GET" }, HealthResponse, signal);

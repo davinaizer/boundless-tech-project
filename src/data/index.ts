@@ -6,6 +6,12 @@ import { createInMemorySearchOffers } from "./in-memory-search-offers";
 import { createPostgresSearchOffers } from "./postgres-search-offers";
 import { CATALOGUE_OFFERS } from "./sample-catalogue";
 
+// What the running server uses, for the log and the health check. Read from env
+// only: it opens no connection, so asking never touches the database.
+export function describeData(): { adapter: "postgres" | "in-memory" } {
+  return { adapter: env.DATABASE_URL === undefined ? "in-memory" : "postgres" };
+}
+
 function createSearchOffers(): SearchOffers {
   if (env.DATABASE_URL === undefined) return createInMemorySearchOffers(CATALOGUE_OFFERS);
   const pool = new Pool({ connectionString: env.DATABASE_URL });

@@ -4,15 +4,21 @@ import { createMockAiClient, type MockAiClient, type MockResponder } from "@/lib
 // The routes get the mock client built here, so each test scripts its own answers.
 let responder: MockResponder | undefined;
 let ai: MockAiClient;
-vi.mock("@/lib/ai", () => ({ getAiClient: () => ai }));
+vi.mock("@/lib/ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai")>()),
+  getAiClient: () => ai,
+}));
 
 import { POST as explain } from "./explain/route";
 import { POST as interpret } from "./interpret/route";
 import { POST as search } from "./search/route";
 
 let logSpy: MockInstance<typeof console.log>;
-const logLines = () =>
+const allLines = () =>
   logSpy.mock.calls.map((call) => JSON.parse(String(call[0])) as Record<string, unknown>);
+// The one `runtime` line comes with the first request of the process; the tests
+// below read the request lines.
+const logLines = () => allLines().filter((line) => line.event === "request");
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -234,6 +240,9 @@ describe("request log line", () => {
     "latencyMs",
     "promptVersion",
     "appVersion",
+    "provider",
+    "model",
+    "adapter",
     "modelCalls",
     "inputTokens",
     "outputTokens",
@@ -258,6 +267,36 @@ describe("request log line", () => {
       requestId: response.headers.get("x-request-id"),
     });
     expect(Object.keys(lines[0]!).sort()).toEqual([...keys, "source"].sort());
+  });
+
+  it("names the provider, model and adapter on every line, refused ones too", async () => {
+    await interpret(post({ query: 5 }));
+    await search(post({ filters: {} }));
+    for (const line of logLines()) {
+      expect(line).toMatchObject({ provider: "mock", model: "none", adapter: "in-memory" });
+    }
+    expect(logLines()).toHaveLength(2);
+  });
+
+  it("writes one runtime line per process, with no key, query or URL", async () => {
+    delete (globalThis as Record<symbol, unknown>)[Symbol.for("benefits-finder.runtime-logged")];
+    await search(post({ filters: {} }));
+    await search(post({ filters: {} }));
+    const runtime = allLines().filter((line) => line.event === "runtime");
+    expect(runtime).toEqual([
+      {
+        event: "runtime",
+        provider: "mock",
+        model: "none",
+        adapter: "in-memory",
+        nodeEnv: "test",
+        appVersion: "v0.0.0+test",
+        promptVersion: expect.any(String),
+        aiTimeoutMs: 8000,
+        rateLimitPerMinute: 20,
+        apiKeyPresent: false,
+      },
+    ]);
   });
 
   it("records the failure reason on fallback", async () => {

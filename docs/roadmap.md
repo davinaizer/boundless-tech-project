@@ -27,7 +27,7 @@ Status of evidence: the scope decisions are judgements made against the original
 
 ### Observability
 
-- **Built:** each POST route handler (not `GET /api/health`, a smoke-test target with no model work) writes one JSON line to stdout: request ID, endpoint, latency, number of model calls (0, 1, or 2 when interpret retries), input and output token counts, whether the keyword fallback ran and the failure reason that caused it, and the outcome. Locally it appears in the terminal; Netlify and Vercel capture stdout if the app is deployed.
+- **Built:** each POST route handler (not `GET /api/health`, a smoke-test target with no model work) writes one JSON line to stdout: request ID, endpoint, latency, number of model calls (0, 1, or 2 when interpret retries), input and output token counts, whether the keyword fallback ran and the failure reason that caused it, the outcome, and which provider, model and data adapter served it (the mock reports `source: llm` too). A `runtime` line is written once per process. `GET /api/health` and a collapsed bar at the bottom of the page show the same ([ADR-016](adr/016-expose-runtime-config.md)). Locally it appears in the terminal; Netlify and Vercel capture stdout if the app is deployed.
 - **Why:** cost per query and fallback rate are the two numbers that show whether the AI layer works and what it costs. The same fields make the eval comparable with live behaviour.
 - **Privacy:** query text is never logged. Logging it needs a data-protection review (see [architecture](architecture.md)).
 - **Not built:** tracing, OpenTelemetry, dashboards, alerts. They need a backend to send to and would show nothing on a demo with no traffic.
@@ -36,7 +36,7 @@ Status of evidence: the scope decisions are judgements made against the original
 
 ### Health check
 
-- **Built:** `GET /api/health` returns `{ status: "ok", version }`. It is built in Phase 0 and is the smoke-test target if the app is deployed ([ADR-011](adr/011-local-first-delivery.md)).
+- **Built:** `GET /api/health` returns `{ status: "ok", version, ai, data }`: the version and the AI provider, model and data adapter in use. It is built in Phase 0 and is the smoke-test target if the app is deployed ([ADR-011](adr/011-local-first-delivery.md)).
 - **Not built:** a readiness check that calls the model. It would spend money on every probe and open the abuse path that [ADR-006](adr/006-demo-protection.md) closes.
 - **Trade-off:** on serverless the platform manages liveness, so the endpoint mostly serves the smoke test and the version string. It proves the app is up, not that the model is reachable.
 - **Production:** uptime monitoring, and a dependency check that does not call the model per probe (for example a cached last-success timestamp).

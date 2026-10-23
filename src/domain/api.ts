@@ -31,6 +31,16 @@ export const ApiError = z.strictObject({
 });
 export type ApiError = z.infer<typeof ApiError>;
 
+// What GET /api/health reports: the running server's version, AI provider with
+// its model ("none" for the mock) and data adapter. No key, URL or other config.
+export const HealthResponse = z.strictObject({
+  status: z.literal("ok"),
+  version: z.string().min(1),
+  ai: z.strictObject({ provider: z.enum(["anthropic", "mock"]), model: z.string().min(1) }),
+  data: z.strictObject({ adapter: z.enum(["postgres", "in-memory"]) }),
+});
+export type HealthResponse = z.infer<typeof HealthResponse>;
+
 // `query` is capped by the route from configuration (ADR-006), so the schema
 // takes the limit rather than fixing it here.
 export const interpretRequest = (maxQueryChars: number) =>
