@@ -1,9 +1,21 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { DebugEntry } from "@/domain/api";
-import { debugEntryRequest, isAbort } from "./api-client";
-import { groupCalls, parseIfJson } from "./debug-groups";
+import {
+  debugEntriesServerSnapshot,
+  debugEntriesSnapshot,
+  loadDebugEntry,
+  subscribeDebugEntries,
+  type EntryState,
+} from "./debug-entries";
+import {
+  badgeOf,
+  groupCalls,
+  parseIfJson,
+  summariseGroup,
+  timingSplit,
+  type CallGroup,
+} from "./debug-groups";
 import {
   debugLogServerSnapshot,
   debugLogSnapshot,
@@ -41,25 +53,67 @@ function Block({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-type ServerSide = DebugEntry | "loading" | "missing";
+const useEntries = () =>
+  useSyncExternalStore(subscribeDebugEntries, debugEntriesSnapshot, debugEntriesServerSnapshot);
 
-function ServerDetail({ requestId }: { requestId: string }) {
-  const [entry, setEntry] = useState<ServerSide>("loading");
+const formatCost = (usd: number) => `≈ $${usd.toFixed(5)}`;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    debugEntryRequest(requestId, controller.signal).then(setEntry, (error: unknown) => {
-      if (!isAbort(error)) setEntry("missing");
-    });
-    return () => controller.abort();
-  }, [requestId]);
+function GroupTotals({
+  group,
+  entries,
+}: {
+  group: CallGroup;
+  entries: ReadonlyMap<string, EntryState>;
+}) {
+  const summary = summariseGroup(group, entries);
+  const head = `${group.calls.length} ${group.calls.length === 1 ? "call" : "calls"} · ${group.totalMs} ms`;
+  if (summary.state === "loading") return <p className="text-sm text-muted">{head} · …</p>;
+  if (summary.state === "unknown") {
+    return <p className="text-sm text-muted">{head} · tokens and cost n/a (a record is gone)</p>;
+  }
+  return (
+    <p className="text-sm text-muted">
+      {head} · {summary.modelCalls} model {summary.modelCalls === 1 ? "call" : "calls"} ·{" "}
+      {summary.tokens.toLocaleString("en-GB")} tokens · {formatCost(summary.costUsd)}
+    </p>
+  );
+}
 
-  if (entry === "loading") return <p className="mt-2 text-muted">Loading the server record…</p>;
+const SEGMENTS = [
+  { key: "modelMs", label: "model", tone: "bg-blue" },
+  { key: "dataMs", label: "data", tone: "bg-slate" },
+  { key: "otherMs", label: "other server", tone: "bg-periwinkle" },
+  { key: "networkMs", label: "network and browser", tone: "bg-muted" },
+] as const;
+
+// Where the selected request's time went. The text carries the figures; the bar
+// is a picture of the same numbers.
+function Timing({ clientMs, entry }: { clientMs: number; entry: Exclude<EntryState, "missing"> }) {
+  const split = timingSplit(clientMs, entry);
+  const total = SEGMENTS.reduce((sum, { key }) => sum + split[key], 0) || 1;
+  return (
+    <div className="mt-2">
+      <p className="text-sm font-bold text-muted">Timing</p>
+      <div aria-hidden="true" className="mt-1 flex h-2 overflow-hidden rounded-full bg-white">
+        {SEGMENTS.map(({ key, tone }) => (
+          <span key={key} className={tone} style={{ width: `${(split[key] / total) * 100}%` }} />
+        ))}
+      </div>
+      <p className="mt-1 text-sm">
+        {SEGMENTS.map(({ key, label }) => `${label} ${split[key]} ms`).join(" · ")}
+      </p>
+    </div>
+  );
+}
+
+function ServerDetail({ call, entry }: { call: ClientCall; entry: EntryState | undefined }) {
+  if (entry === undefined) return <p className="mt-2 text-muted">Loading the server record…</p>;
   if (entry === "missing") {
     return <p className="mt-2 text-muted">No server record (it keeps the last 20).</p>;
   }
   return (
     <>
+      <Timing clientMs={call.ms} entry={entry} />
       {entry.log && <Block label="Log line" value={entry.log} />}
       {entry.calls.length === 0 && <p className="mt-2 text-muted">No model or data calls.</p>}
       {entry.calls.map((call, index) =>
@@ -89,6 +143,12 @@ function ServerDetail({ requestId }: { requestId: string }) {
 export function RequestsView() {
   const calls = useSyncExternalStore(subscribeDebugLog, debugLogSnapshot, debugLogServerSnapshot);
   const [selected, setSelected] = useState<ClientCall | null>(null);
+  const entries = useEntries();
+
+  // Each request's server record is fetched once; it feeds the totals, badges and timing.
+  useEffect(() => {
+    for (const call of calls) if (call.requestId) loadDebugEntry(call.requestId);
+  }, [calls]);
 
   if (calls.length === 0) {
     return <p className="text-muted">No requests yet. Run a search.</p>;
@@ -99,27 +159,32 @@ export function RequestsView() {
         {groupCalls(calls).map((group) => (
           <section key={`${group.calls[0]!.requestId ?? "none"}-${group.label}`}>
             <h3 className="font-heading text-base font-bold break-words text-ink">{group.label}</h3>
-            <p className="text-sm text-muted">
-              {group.calls.length} {group.calls.length === 1 ? "call" : "calls"}, {group.totalMs} ms
-            </p>
+            <GroupTotals group={group} entries={entries} />
             <ul className="mt-1 flex flex-col gap-1">
-              {group.calls.map((call, index) => (
-                <li key={`${call.requestId ?? "none"}-${index}`}>
-                  <button
-                    type="button"
-                    aria-pressed={selected === call}
-                    onClick={() => setSelected(call)}
-                    className={`grid w-full grid-cols-[1fr_auto_auto_auto] gap-3 rounded-tile px-3 py-1 text-left ${
-                      selected === call ? "bg-blue text-white" : "bg-white"
-                    }`}
-                  >
-                    <span>{call.path.replace("/api/", "")}</span>
-                    <span>{call.status ?? "no answer"}</span>
-                    <span>{call.ms} ms</span>
-                    <span>{sourceOf(call)}</span>
-                  </button>
-                </li>
-              ))}
+              {group.calls.map((call, index) => {
+                const badge = badgeOf(call.requestId ? entries.get(call.requestId) : undefined);
+                return (
+                  <li key={`${call.requestId ?? "none"}-${index}`}>
+                    <button
+                      type="button"
+                      aria-pressed={selected === call}
+                      onClick={() => setSelected(call)}
+                      className={`grid w-full grid-cols-[1fr_auto_auto_auto] gap-3 rounded-tile px-3 py-1 text-left ${
+                        selected === call ? "bg-blue text-white" : "bg-white"
+                      }`}
+                    >
+                      <span>{call.path.replace("/api/", "")}</span>
+                      <span>{call.status ?? "no answer"}</span>
+                      <span>{call.ms} ms</span>
+                      {badge ? (
+                        <span className="rounded-full bg-warn-tint px-2 text-warn">{badge}</span>
+                      ) : (
+                        <span>{sourceOf(call)}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ))}
@@ -133,8 +198,7 @@ export function RequestsView() {
             <Block label="Request body" value={selected.requestBody} />
             <Block label="Response body" value={selected.responseBody} />
             {selected.requestId && (
-              // Keyed, so a new selection starts from "loading" again.
-              <ServerDetail key={selected.requestId} requestId={selected.requestId} />
+              <ServerDetail call={selected} entry={entries.get(selected.requestId)} />
             )}
           </>
         )}

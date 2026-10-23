@@ -1,3 +1,5 @@
+import type { DebugEntry } from "@/domain/api";
+import type { EntryState } from "./debug-entries";
 import type { ClientCall } from "./debug-log";
 
 // Pure helpers for the Requests tab (development only, ADR-017).
@@ -76,4 +78,78 @@ export function groupCalls(calls: readonly ClientCall[]): CallGroup[] {
     calls: group,
     totalMs: group.reduce((sum, call) => sum + call.ms, 0),
   }));
+}
+
+// The fields of a request log line the inspector reads; the rest is shown as is.
+type LogLine = {
+  latencyMs?: number;
+  modelCalls?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  estimatedCostUsd?: number;
+  source?: string;
+  failure?: string;
+};
+const logOf = (entry: DebugEntry) => (entry.log ?? {}) as LogLine;
+
+export type GroupSummary =
+  // A record of the group is still loading.
+  | { state: "loading" }
+  // A record is gone (the server keeps 20), so the totals would be wrong.
+  | { state: "unknown" }
+  | { state: "known"; modelCalls: number; tokens: number; costUsd: number };
+
+// Model calls, tokens and estimated cost of one search, from its log lines. A
+// call that never got a request ID (no answer) made no server record to count.
+export function summariseGroup(
+  group: CallGroup,
+  entries: ReadonlyMap<string, EntryState>,
+): GroupSummary {
+  let modelCalls = 0;
+  let tokens = 0;
+  let costUsd = 0;
+  let missing = false;
+  for (const call of group.calls) {
+    if (call.requestId === null) continue;
+    const entry = entries.get(call.requestId);
+    if (entry === undefined) return { state: "loading" };
+    if (entry === "missing") {
+      missing = true;
+      continue;
+    }
+    const log = logOf(entry);
+    modelCalls += log.modelCalls ?? 0;
+    tokens += (log.inputTokens ?? 0) + (log.outputTokens ?? 0);
+    costUsd += log.estimatedCostUsd ?? 0;
+  }
+  return missing ? { state: "unknown" } : { state: "known", modelCalls, tokens, costUsd };
+}
+
+// What a row says about the model's answer: the fallback and its reason, or that
+// interpret recovered on its retry. Undefined when there is nothing to flag.
+export function badgeOf(entry: EntryState | undefined): string | undefined {
+  if (entry === undefined || entry === "missing") return undefined;
+  const log = logOf(entry);
+  if (log.source === "fallback") return log.failure ? `fallback · ${log.failure}` : "fallback";
+  if (log.source === "llm" && (log.modelCalls ?? 0) > 1) return "retried";
+  return undefined;
+}
+
+export type TimingSplit = { modelMs: number; dataMs: number; otherMs: number; networkMs: number };
+
+// Where one request's time went, as the browser measured it. "Other" is the
+// server's time less its model and data calls; "network" is the browser's time
+// less the server's. A part below zero (clocks measured apart) is shown as 0.
+export function timingSplit(clientMs: number, entry: DebugEntry): TimingSplit {
+  const sum = (kind: "model" | "data") =>
+    entry.calls.filter((call) => call.kind === kind).reduce((total, call) => total + call.ms, 0);
+  const modelMs = sum("model");
+  const dataMs = sum("data");
+  const serverMs = logOf(entry).latencyMs ?? modelMs + dataMs;
+  return {
+    modelMs,
+    dataMs,
+    otherMs: Math.max(0, serverMs - modelMs - dataMs),
+    networkMs: Math.max(0, clientMs - serverMs),
+  };
 }
