@@ -10,13 +10,17 @@ export async function POST(request: Request) {
     body: ExplainRequest,
     result: ExplainResponse,
     run: async ({ filters, offerIds }) => {
-      const { explanations, source, modelCalls, usage, failure } = await explainResults(
-        filters,
-        offerIds,
-      );
+      const { explanations, source, modelCalls, usage, failure, groundingRule } =
+        await explainResults(filters, offerIds);
       return {
         body: { explanations },
-        telemetry: { modelCalls, usage, source, ...(failure ? { failure } : {}) },
+        telemetry: {
+          modelCalls,
+          usage,
+          source,
+          ...(failure ? { failure } : {}),
+          ...(groundingRule ? { groundingRule } : {}),
+        },
       };
     },
   });

@@ -11,6 +11,11 @@
   --color-tint: #eff4f6;
   --color-line: #dfecee;
   --color-periwinkle: #ced7ec;
+  /* Runtime badges (the debug bar): real services green, stand-ins amber. */
+  --color-ok: #17602f;
+  --color-ok-tint: #e3f3e8;
+  --color-warn: #6b4500;
+  --color-warn-tint: #fdf0d5;
 
   --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-carlito), ui-sans-serif, system-ui, sans-serif;

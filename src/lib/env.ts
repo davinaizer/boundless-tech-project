@@ -10,6 +10,12 @@ const schema = z
     // Inlined at build time (next.config.ts), so it is read below as a literal
     // `process.env.NEXT_PUBLIC_*` property access, never destructured or computed.
     NEXT_PUBLIC_APP_VERSION: z.string().min(1),
+    // Set by Next (`next dev` is development, `next build` and `next start` are
+    // production). Unset means production, so anything gated on development fails closed.
+    NODE_ENV: z.preprocess(
+      unsetIfEmpty,
+      z.enum(["development", "production", "test"]).default("production"),
+    ),
     // Postgres when set, the in-memory adapter when unset or empty (ADR-010).
     DATABASE_URL: z.preprocess(unsetIfEmpty, z.url({ protocol: /^postgres(ql)?$/ }).optional()),
     // The mock by default, so the app, CI and e2e run without a key (ADR-007).
@@ -54,6 +60,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
 
 export const env = parseEnv({
   NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+  NODE_ENV: process.env.NODE_ENV,
   DATABASE_URL: process.env.DATABASE_URL,
   AI_PROVIDER: process.env.AI_PROVIDER,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,

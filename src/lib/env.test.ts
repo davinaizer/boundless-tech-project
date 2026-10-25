@@ -40,6 +40,18 @@ describe("parseEnv", () => {
     expect(message).not.toContain(secret);
   });
 
+  it("defaults NODE_ENV to production when unset or empty, so a gate on development fails closed", () => {
+    expect(parseEnv({ ...version }).NODE_ENV).toBe("production");
+    expect(parseEnv({ ...version, NODE_ENV: "" }).NODE_ENV).toBe("production");
+  });
+
+  it("accepts the three NODE_ENV values and rejects others", () => {
+    for (const value of ["development", "production", "test"]) {
+      expect(parseEnv({ ...version, NODE_ENV: value }).NODE_ENV).toBe(value);
+    }
+    expect(() => parseEnv({ ...version, NODE_ENV: "staging" })).toThrow();
+  });
+
   it("defaults AI_PROVIDER to mock when unset or empty", () => {
     expect(parseEnv({ ...version }).AI_PROVIDER).toBe("mock");
     expect(parseEnv({ ...version, AI_PROVIDER: "" }).AI_PROVIDER).toBe("mock");

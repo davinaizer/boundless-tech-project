@@ -12,6 +12,10 @@ colors:
   tint: "#EFF4F6"
   line: "#DFECEE"
   periwinkle: "#CED7EC"
+  ok: "#17602F"
+  ok-tint: "#E3F3E8"
+  warn: "#6B4500"
+  warn-tint: "#FDF0D5"
   surface: "#FFFFFF"
 typography:
   display:
@@ -175,6 +179,8 @@ Tone: plain, friendly, sentence case. Buttons say what happens ("Find offers"). 
 - **tint (#EFF4F6):** page background and chip and tag fills.
 - **line (#DFECEE):** hairline borders on cards.
 - **periwinkle (#CED7EC):** borders of chips and saving tags. Not the query box: periwinkle on white is 1.44:1, under the 3:1 that WCAG 1.4.11 asks of an input's boundary, so the query box uses muted (5.9:1).
+- **ok (#17602F) on ok-tint (#E3F3E8):** the runtime badge when the real service is in use (the Anthropic provider, Postgres); 6.6:1.
+- **warn (#6B4500) on warn-tint (#FDF0D5):** the runtime badge for a stand-in (the mock provider, the in-memory adapter); 7.5:1. Both badges always carry the word, so colour is never the only cue. They appear in the debug bar only.
 - **surface (#FFFFFF):** header, hero, cards.
 
 Red is used sparingly so it keeps its meaning. Do not use it for tier labels or errors.

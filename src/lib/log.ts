@@ -30,6 +30,11 @@ export type RequestLog = {
   latencyMs: number;
   promptVersion: string;
   appVersion: string;
+  // What served the request: "mock" or "anthropic", its model ("none" for the
+  // mock) and the data adapter. "source: llm" alone does not say whether the model was real.
+  provider: string;
+  model: string;
+  adapter: string;
   modelCalls: number;
   inputTokens: number;
   outputTokens: number;
@@ -38,10 +43,38 @@ export type RequestLog = {
   source?: string;
   // Why the model gave no usable answer, set only on fallback after a call.
   failure?: string;
+  // The grounding rule an explain answer broke, set only with failure "ungrounded".
+  // A rule name only: never the model's text, a line or an offer ID.
+  groundingRule?: string;
   // Class name of an unexpected error, for outcome "internal_error".
   errorName?: string;
 };
 
 export function logRequest(line: RequestLog): void {
   console.log(JSON.stringify({ event: "request", ...line }));
+}
+
+// What the process runs on, written once. Plain configuration and one boolean for
+// the key: never the key itself, a connection string or a query.
+export type RuntimeLog = {
+  provider: string;
+  model: string;
+  adapter: string;
+  nodeEnv: string;
+  appVersion: string;
+  promptVersion: string;
+  aiTimeoutMs: number;
+  rateLimitPerMinute: number;
+  apiKeyPresent: boolean;
+};
+
+const RUNTIME_LOGGED = Symbol.for("benefits-finder.runtime-logged");
+
+// Held on globalThis, like the model limiter, so route bundles that load this
+// module twice still write the line once per process.
+export function logRuntimeOnce(line: () => RuntimeLog): void {
+  const holder = globalThis as { [RUNTIME_LOGGED]?: true };
+  if (holder[RUNTIME_LOGGED]) return;
+  holder[RUNTIME_LOGGED] = true;
+  console.log(JSON.stringify({ event: "runtime", ...line() }));
 }

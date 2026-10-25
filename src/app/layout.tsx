@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Carlito, Inter } from "next/font/google";
 import { APP_VERSION } from "@/lib/version";
+import { DebugPanel } from "./_components/DebugPanel";
 import "./globals.css";
 
 // Stand-ins for the public site's Korto and Aller (DESIGN.md).
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </p>
           <p className="mt-1 text-sm">{APP_VERSION}</p>
         </footer>
+        <DebugPanel />
       </body>
     </html>
   );

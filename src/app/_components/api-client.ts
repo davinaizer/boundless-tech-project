@@ -1,12 +1,15 @@
 import type { z } from "zod";
 import {
   ApiError,
+  DebugEntry,
   ExplainResponse,
+  HealthResponse,
   InterpretResponse,
   SearchResponse,
   type ApiErrorCode,
 } from "@/domain/api";
 import type { Filters } from "@/domain/filters";
+import { recordClientCall } from "./debug-log";
 
 export type ClientErrorCode = ApiErrorCode | "network" | "bad_response";
 
@@ -32,31 +35,44 @@ export const errorMessage = (code: ClientErrorCode) => MESSAGES[code];
 export const isAbort = (error: unknown) =>
   error instanceof DOMException && error.name === "AbortError";
 
-async function post<T>(
+// `debugBody` is the request body to show in the debug bar; the health call,
+// which feeds the bar, passes none and is not recorded.
+async function call<T>(
   path: string,
-  body: unknown,
+  init: RequestInit,
   schema: z.ZodType<T>,
   signal: AbortSignal,
+  debugBody?: unknown,
 ): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
+  const started = performance.now();
+  let response: Response | undefined;
+  let json: unknown;
+  const record = () => {
+    if (debugBody === undefined) return;
+    recordClientCall({
+      path,
+      requestBody: debugBody,
+      status: response?.status ?? null,
+      ms: Math.round(performance.now() - started),
+      responseBody: json,
+      requestId: response?.headers.get("x-request-id") ?? null,
     });
+  };
+  try {
+    response = await fetch(path, { ...init, signal });
   } catch (error) {
     if (isAbort(error)) throw error;
+    record();
     throw new ApiRequestError("network");
   }
-  let json: unknown;
   try {
     json = await response.json();
   } catch (error) {
     if (isAbort(error)) throw error;
+    record();
     throw new ApiRequestError("bad_response");
   }
+  record();
   if (!response.ok) {
     const parsed = ApiError.safeParse(json);
     throw new ApiRequestError(parsed.success ? parsed.data.error.code : "bad_response");
@@ -66,6 +82,19 @@ async function post<T>(
   return parsed.data;
 }
 
+const post = <T>(path: string, body: unknown, schema: z.ZodType<T>, signal: AbortSignal) =>
+  call(
+    path,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    schema,
+    signal,
+    body,
+  );
+
 export const interpretRequest = (query: string, signal: AbortSignal) =>
   post("/api/interpret", { query }, InterpretResponse, signal);
 
@@ -74,3 +103,10 @@ export const searchRequest = (filters: Filters, signal: AbortSignal) =>
 
 export const explainRequest = (filters: Filters, offerIds: string[], signal: AbortSignal) =>
   post("/api/explain", { filters, offerIds }, ExplainResponse, signal);
+
+export const healthRequest = (signal: AbortSignal) =>
+  call("/api/health", { method: "GET" }, HealthResponse, signal);
+
+// Development only: the server's record of one request (ADR-017).
+export const debugEntryRequest = (requestId: string, signal: AbortSignal) =>
+  call(`/api/debug/${encodeURIComponent(requestId)}`, { method: "GET" }, DebugEntry, signal);

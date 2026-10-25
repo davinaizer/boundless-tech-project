@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { estimateCostUsd, logRequest, type RequestLog } from "./log";
+import {
+  estimateCostUsd,
+  logRequest,
+  logRuntimeOnce,
+  type RequestLog,
+  type RuntimeLog,
+} from "./log";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -27,6 +33,9 @@ describe("logRequest", () => {
       latencyMs: 3,
       promptVersion: "p",
       appVersion: "v",
+      provider: "mock",
+      model: "none",
+      adapter: "in-memory",
       modelCalls: 0,
       inputTokens: 0,
       outputTokens: 0,
@@ -35,5 +44,28 @@ describe("logRequest", () => {
     logRequest(line);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(JSON.parse(spy.mock.calls[0]![0] as string)).toEqual({ event: "request", ...line });
+  });
+});
+
+describe("logRuntimeOnce", () => {
+  const line: RuntimeLog = {
+    provider: "anthropic",
+    model: "claude-haiku-5-5",
+    adapter: "postgres",
+    nodeEnv: "production",
+    appVersion: "v",
+    promptVersion: "p",
+    aiTimeoutMs: 8000,
+    rateLimitPerMinute: 20,
+    apiKeyPresent: true,
+  };
+
+  it("writes one runtime line per process, however often it is called", () => {
+    delete (globalThis as Record<symbol, unknown>)[Symbol.for("benefits-finder.runtime-logged")];
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    logRuntimeOnce(() => line);
+    logRuntimeOnce(() => line);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(spy.mock.calls[0]![0] as string)).toEqual({ event: "runtime", ...line });
   });
 });

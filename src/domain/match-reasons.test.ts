@@ -78,20 +78,26 @@ describe("groundExplanations", () => {
 
   it("rejects the whole answer for an ID that was not sent", () => {
     const answer = { explanations: [entry("offer-1", "Fine."), entry("offer-9", "Invented.")] };
-    expect(groundExplanations(answer, sent)).toEqual({ ok: false });
+    expect(groundExplanations(answer, sent)).toEqual({ ok: false, rule: "unknown_id" });
   });
 
   it("rejects a repeated ID", () => {
     const answer = { explanations: [entry("offer-1", "One."), entry("offer-1", "Again.")] };
-    expect(groundExplanations(answer, sent)).toEqual({ ok: false });
+    expect(groundExplanations(answer, sent)).toEqual({ ok: false, rule: "duplicate_id" });
   });
 
   it("rejects empty, whitespace and over-long text", () => {
-    for (const text of ["", "   ", "x".repeat(MAX_EXPLANATION_LENGTH + 1)]) {
+    for (const text of ["", "   "]) {
       expect(groundExplanations({ explanations: [entry("offer-1", text)] }, sent)).toEqual({
         ok: false,
+        rule: "empty_line",
       });
     }
+    const over = "x".repeat(MAX_EXPLANATION_LENGTH + 1);
+    expect(groundExplanations({ explanations: [entry("offer-1", over)] }, sent)).toEqual({
+      ok: false,
+      rule: "too_long",
+    });
     const atLimit = "x".repeat(MAX_EXPLANATION_LENGTH);
     expect(groundExplanations({ explanations: [entry("offer-1", atLimit)] }, sent).ok).toBe(true);
   });
@@ -107,6 +113,7 @@ describe("groundExplanations", () => {
     ]) {
       expect(groundExplanations({ explanations: [entry("offer-1", text)] }, sent)).toEqual({
         ok: false,
+        rule: "number_or_symbol",
       });
     }
   });
@@ -119,8 +126,11 @@ describe("groundExplanations", () => {
       { explanations: "no" },
       { explanations: [{ offerId: "offer-1" }] },
     ]) {
-      expect(groundExplanations(raw, sent)).toEqual({ ok: false });
+      expect(groundExplanations(raw, sent)).toEqual({ ok: false, rule: "invalid_shape" });
     }
-    expect(groundExplanations({ explanations: [], extra: true }, sent)).toEqual({ ok: false });
+    expect(groundExplanations({ explanations: [], extra: true }, sent)).toEqual({
+      ok: false,
+      rule: "invalid_shape",
+    });
   });
 });
