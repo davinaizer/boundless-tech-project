@@ -14,7 +14,7 @@ Status of evidence: the scope decisions are judgements made against the original
 | App version in the UI | In scope, small | `v<package version>+<build>.<short sha>` in the footer and on `/api/health` |
 | Prompt and schema version | In scope, trivial | `PROMPT_VERSION` constant, logged and written into eval output |
 | Model timeout and error shape | In scope, minimal | Config timeout on model calls; one `{ error: { code, message, requestId } }` shape from all endpoints |
-| Public deployment | Optional, at a gate | Netlify (Vercel fallback), after Phases 0 to 5 are complete, with the demo recorded afterwards ([ADR-011](adr/011-local-first-delivery.md), order superseded by [ADR-015](adr/015-demo-recorded-after-deploy.md)) |
+| Public deployment | Built (Phase 6, optional): live on Netlify | Netlify (Vercel fallback, not used), after Phases 0 to 5 were complete, with the demo recorded afterwards ([ADR-011](adr/011-local-first-delivery.md), order superseded by [ADR-015](adr/015-demo-recorded-after-deploy.md)) |
 | OpenAPI contract | Optional | `openapi.json` generated from the Zod schemas, only if time allows |
 | Analytics | Below the line | Documented, not built |
 | API versioning (`/v1`) | Below the line | Documented, not built |
@@ -73,9 +73,9 @@ Status of evidence: the scope decisions are judgements made against the original
 
 ### Public deployment
 
-- **Plan:** deploy to Netlify (Vercel fallback) after Phases 0 to 5 are complete, time-boxed to 1.5 hours, with the demo recorded afterwards ([ADR-011](adr/011-local-first-delivery.md), order superseded by [ADR-015](adr/015-demo-recorded-after-deploy.md)).
+- **Status:** done. Deployed to Netlify (Vercel fallback, not used) after Phases 0 to 5, time-boxed to 1.5 hours, with the demo recorded afterwards ([ADR-011](adr/011-local-first-delivery.md), order superseded by [ADR-015](adr/015-demo-recorded-after-deploy.md)).
 - **Why optional:** the brief lists deployment as optional and accepts a recorded demo.
-- **Trade-off:** no live link by default, and reviewers need an API key or the mock provider to try the AI themselves. Deploying adds the public-endpoint controls ([ADR-006](adr/006-demo-protection.md)) and exposes the app to the free-plan caps.
+- **Trade-off:** reviewers running the code locally need an API key or the mock provider to try the AI themselves. Deploying added the public-endpoint controls ([ADR-006](adr/006-demo-protection.md)) and exposes the app to the free-plan caps.
 - **Unverified:** pnpm detection on Netlify, database connectivity from a function, and Netlify Database storage pricing after July 2026.
 
 ## Below the line
@@ -119,7 +119,7 @@ No load data exists. The items below are hypotheses about where limits would app
 | Possible limit | Status | What would confirm it | Possible response |
 |---|---|---|---|
 | Model latency and cost per query | Cost per query is estimated in [ADR-005](adr/005-llm-provider.md); latency not measured | Token and latency fields from the logs | Cache repeated interpretations; stream explanations |
-| In-memory rate limit does not hold across serverless instances | Known limitation, relevant only if deployed ([ADR-006](adr/006-demo-protection.md)) | Abuse observed beyond the provider spend limit | Shared store for counters |
+| In-memory rate limit does not hold across serverless instances | Known limitation, relevant because the app is deployed ([ADR-006](adr/006-demo-protection.md)) | Abuse observed beyond the provider spend limit | Shared store for counters |
 | Catalogue source | Postgres adapter built for the sample catalogue, in-memory fallback ([ADR-010](adr/010-postgres-data-layer.md)) | A real catalogue managed outside this app | Search-service-backed adapter |
 | Filters beyond category, expiry and tier | Only those are evidenced in the production index | Index inspection | Index enrichment, or handle as free-text query |
 | Parse accuracy on real queries | Eval is a hand-written regression check | Logged fallback and chip-edit rates | Larger eval set; prompt changes tracked by `PROMPT_VERSION` |

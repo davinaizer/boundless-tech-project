@@ -9,9 +9,9 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, e2e and eval. Phases 0 to 4.1 done; Phase 5 (this README, the demo) in progress. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, rate limit, a runtime bar and a development-only request inspector, e2e and eval. Phases 0 to 6 done except two Netlify checks left open in Phase 6; the final documentation review and the `v0.1.0` tag are still to do. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
 | Live demo | [https://boundless-benefits-finder.netlify.app/](https://boundless-benefits-finder.netlify.app/) on Netlify. The footer and `/api/health` show the deployed version; it is the last deployed build, not necessarily the tip of `develop` |
-| Recorded demo | Pending: link will be added here. It is recorded after the optional deploy phase, from the live app if there is one, otherwise locally ([ADR-015](docs/adr/015-demo-recorded-after-deploy.md)) |
+| Recorded demo | [Loom video](https://www.loom.com/playlists/402ce596-9068-485e-af77-d84e756d1c37/view), recorded after the deploy phase ([ADR-015](docs/adr/015-demo-recorded-after-deploy.md)) |
 
 ## The idea in 30 seconds
 
@@ -47,7 +47,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | Framework | Next.js (App Router), React, TypeScript strict |
 | Styling | Tailwind |
 | Validation | Zod |
-| Tests | Vitest (unit and integration against Postgres), Playwright (two happy-path e2e tests), on-demand eval script |
+| Tests | Vitest (unit and integration against Postgres), Playwright (16 e2e tests in 5 specs, including the two happy paths), on-demand eval script |
 | CI | GitHub Actions |
 | Data | Fictional sample catalogue behind a `SearchOffers` port: Postgres adapter when `DATABASE_URL` is set, in-memory adapter otherwise ([ADR-010](docs/adr/010-postgres-data-layer.md)) |
 | Local services | Podman runs Postgres from a Compose file; the app runs with `pnpm dev` ([ADR-011](docs/adr/011-local-first-delivery.md)) |
@@ -83,7 +83,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [004](docs/adr/004-data-layer.md) | Superseded by ADR-010 |
 | [005](docs/adr/005-llm-provider.md) | Claude Haiku 5.5 behind a single module |
 | [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit (the last two only if deployed) |
-| [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e paths, on-demand eval |
+| [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e happy paths (UI and debug-bar specs were added later), on-demand eval |
 | [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
 | [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |
 | [010](docs/adr/010-postgres-data-layer.md) | Postgres adapter as the default behind the port; in-memory adapter kept for tests and a no-database run |
@@ -152,20 +152,20 @@ pnpm dev                         # the app reads DATABASE_URL from .env.local: u
 
 ### Performance and accessibility baseline
 
-One Lighthouse 13.4.1 run of the home page at `http://localhost:3000/` on 2026-10-15 (desktop profile, simulated throttling): Performance, Accessibility, Best practices and SEO all 100; first contentful paint 0.2 s, largest contentful paint 0.5 s, total blocking time 0 ms, layout shift 0. Report: [JSON](docs/audits/lighthouse-localhost_3000-20261015T174915.json), [PDF](docs/audits/lighthouse-localhost_3000-20261015T174915.pdf). Limits: a single run on a local machine, the empty home page only (not a search or the results), desktop only, and the report does not record whether it was the dev or the production server. Treat it as a baseline to compare against, not a performance claim.
+One Lighthouse 13.4.1 run of the home page at `http://localhost:3000/` on 2026-10-15 (desktop profile, simulated throttling): Performance, Accessibility, Best practices and SEO all 100; first contentful paint 0.2 s, largest contentful paint 0.5 s, total blocking time 0 ms, layout shift 0. Report: [JSON](docs/audits/lighthouse-localhost_3000-20261015T174915.json), [PDF](docs/audits/lighthouse-localhost_3000-20261015T174915.pdf). It predates the runtime bar added in Phase 5.1 and has not been re-run since. Limits: a single run on a local machine, the empty home page only (not a search or the results), desktop only, and the report does not record whether it was the dev or the production server. Treat it as a baseline to compare against, not a performance claim.
 
 ## Trade-offs
 
 Current, from the ADRs:
 
 - **Postgres plus an in-memory fallback.** The data layer shows schema, migrations and safe query building, and the port has two real implementations. The cost is about 2 hours (estimate) and a container for the Postgres path; the in-memory adapter keeps the app runnable without one ([ADR-010](docs/adr/010-postgres-data-layer.md)).
-- **Deployed demo.** The live site uses the real model behind that rate limit and the 200-character query cap. The provider-side spend limit is the control that actually bounds cost; it is set by the author in the Anthropic console, cannot be seen from this repository, and is not verified here.
-- **Local-first, deployment optional.** The recorded demo is a required deliverable and is recorded after the optional deploy phase, which is time-boxed; if the deploy is abandoned the demo is recorded locally. The cost is no live link by default, and reviewers need an API key or the mock provider to try the AI themselves ([ADR-011](docs/adr/011-local-first-delivery.md)).
+- **Deployed demo.** The live site uses the real model behind the rate limit (below) and the 200-character query cap. The provider-side spend limit is the control that actually bounds cost; it is set by the author in the Anthropic console, cannot be seen from this repository, and is not verified here.
+- **Local-first, deployment optional.** The app was built to run locally first, and the deploy was an optional, time-boxed phase done afterwards; the demo was recorded after it ([ADR-011](docs/adr/011-local-first-delivery.md), [ADR-015](docs/adr/015-demo-recorded-after-deploy.md)). Anyone running the code locally still needs an API key or the mock provider to try the AI themselves.
 - **Sample data only.** Savings are illustrative, not claims about real offers.
 - **Small model, no benchmark.** Parse quality is checked by a hand-written eval, which is a regression check, not a measure of production accuracy.
 - **Eval is small and partly tuned.** 21 author-written cases, one sample each, and the prompt was adjusted after failures on the same set. The mock-based e2e cannot see real-model behaviour, which is how the "cheap" price bug was found only by the eval ([eval-results](docs/eval-results.md)).
 - **No quality judge for the explain step.** Deterministic grounding guards what an explanation may say, and a rejected line falls back to a plain description. A model-graded eval was considered and dropped: the only judge available without changing the AI module is the same model family, on about 18 lines, a weak signal ([roadmap](docs/roadmap.md)).
-- **Best-effort rate limiting.** The two model endpoints share a per-address limit (20 requests a minute by default, only with the real provider) that returns HTTP 429. It is in memory, so each serverless instance counts on its own and a restart forgets it. The provider spend limit is the real control, and it lives in the provider console, outside this repository (see the deployed-demo note below).
+- **Best-effort rate limiting.** The two model endpoints share a per-address limit (20 requests a minute by default, only with the real provider) that returns HTTP 429. It is in memory, so each serverless instance counts on its own and a restart forgets it. The provider spend limit is the real control, and it lives in the provider console, outside this repository (see the deployed-demo note above).
 - **Only some filters are evidenced in the production index.** Category, expiry and probably membership level were observed. Region, price and audience exist only in the sample data.
 
 Operational scope (observability, health check, versioning, OpenAPI, analytics) and scalability hypotheses are in the [roadmap](docs/roadmap.md).
@@ -197,7 +197,7 @@ src/
   services/            findOffers, interpretQuery, explainResults
 db/migrations/ scripts/        SQL migrations and the seed script
 evals/                         model eval cases, scorer and runner (`pnpm eval`)
-e2e/                           Playwright specs (two happy paths)
+e2e/                           Playwright specs (16 tests: two happy paths, card layout, loading states, runtime bar)
 docs/audits/                   Lighthouse baseline report (JSON and PDF)
 .github/workflows/ci.yml       check and build; integration (Postgres service); e2e (Playwright, mock provider)
 compose.yaml, .env.example     local Postgres for dev and integration tests (Podman or Docker), dev-only values

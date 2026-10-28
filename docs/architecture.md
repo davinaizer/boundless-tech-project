@@ -123,7 +123,7 @@ boundless-tech-test/
 |-- .github/workflows/ci.yml     jobs: check (typecheck, lint, format, unit, build), integration (Postgres service), e2e (mock provider)
 |-- db/migrations/               plain SQL migrations, applied by node-pg-migrate
 |-- docs/                        brief, adr, research, design, audits (Lighthouse baseline), architecture, roadmap, eval-results, TODO
-|-- e2e/                         Playwright: two happy-path specs, run by `pnpm e2e`
+|-- e2e/                         Playwright: 16 tests in 5 specs, run by `pnpm e2e`
 |-- evals/                       cases, scorer and run script, on demand, real model (`pnpm eval`)
 |-- scripts/                     seed script, run with tsx
 |-- vitest/                      test support: `server-only` stub, integration global setup
@@ -178,7 +178,7 @@ Decided in Phase 3:
 - Route states (ADR-009 rule 12): `loading.tsx`, `error.tsx`, `not-found.tsx` and `global-error.tsx` in `src/app`, over one `StatePanel`. They show fixed text and never an error message or digest. `global-error.tsx` replaces the root layout, so it renders its own `<html>`, imports `globals.css` and carries the concept notice; it runs only in a production build. `loading.tsx` is rarely visible, since the page is static and loads its results on the client.
 
 Decided in Phase 4:
-- e2e ([ADR-007](adr/007-test-strategy.md)): `playwright.config.ts` and two specs in `e2e/` (`search.spec.ts`, `edit-chip.spec.ts`), Chromium only, run by `pnpm e2e`. The `webServer` builds and starts the app (`pnpm build && pnpm start`) on port 3100 and never reuses a running server, so a dev server with the real model cannot be picked up; it sets `AI_PROVIDER=mock` and empty `ANTHROPIC_API_KEY` and `DATABASE_URL` itself, so a key or database URL in the shell or `.env.local` cannot reach the run (checked 2026-10-15 with hostile shell values). The specs assert properties, not counts, because offers expire against the real date.
+- e2e ([ADR-007](adr/007-test-strategy.md)): `playwright.config.ts` and, at Phase 4, two specs in `e2e/` (`search.spec.ts`, `edit-chip.spec.ts`); `card-layout`, `loading-states` and `debug-panel` specs were added later, 16 tests in 5 specs in all. Chromium only, run by `pnpm e2e`. The `webServer` builds and starts the app (`pnpm build && pnpm start`) on port 3100 and never reuses a running server, so a dev server with the real model cannot be picked up; it sets `AI_PROVIDER=mock` and empty `ANTHROPIC_API_KEY` and `DATABASE_URL` itself, so a key or database URL in the shell or `.env.local` cannot reach the run (checked 2026-10-15 with hostile shell values). The specs assert properties, not counts, because offers expire against the real date.
 - The mock provider has canned answers (`src/lib/ai/canned.ts`, chosen in `getAiClient()`): one exact query, the page's placeholder text, gets fixed filters, and an explain prompt gets one fixed grounded line per offer ID it carries; any other request answers like an unreachable model, so every other query takes the fallbacks. The responder tells the services apart by the schema's properties and imports none of them. `src/services/canned-ai.test.ts` runs the canned answers through the real `interpretQuery` and `explainResults`. A deployment that left `AI_PROVIDER` unset would show a canned "Read by AI" for that one query; the deploy phase sets the variable.
 
 ## Contracts
