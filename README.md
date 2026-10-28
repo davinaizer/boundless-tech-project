@@ -9,8 +9,8 @@ Built as a technical challenge for a Senior Fullstack Engineer role. It is an in
 | Area | State |
 |---|---|
 | Problem, research, architecture, decisions | Done: see [Where to look](#where-to-look) |
-| Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, rate limit, a runtime bar and a development-only request inspector, e2e and eval. Phases 0 to 6 done except two Netlify checks left open in Phase 6; the final documentation review and the `v0.1.0` tag are still to do. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
-| Live demo | [https://boundless-benefits-finder.netlify.app/](https://boundless-benefits-finder.netlify.app/) on Netlify. The footer and `/api/health` show the deployed version; it is the last deployed build, not necessarily the tip of `develop` |
+| Implementation | Built and checked: domain and search, Postgres and in-memory data layer, AI client with a mock, `interpretQuery` and `explainResults`, Route Handlers, finder UI, request log line, rate limit, a runtime bar and a development-only request inspector, e2e and eval. Phases 0 to 6 done and the final documentation review run on 2026-10-28; the time log still has blanks and the `v0.1.0` tag is still to do. Plan and acceptance criteria in [docs/TODO.md](docs/TODO.md) |
+| Live demo | [https://boundless-benefits-finder.netlify.app/](https://boundless-benefits-finder.netlify.app/) on Netlify, running the real model and Postgres. The footer, the runtime bar and `/api/health` show the deployed version, provider and data adapter; it is the last deployed build, not necessarily the tip of `develop` |
 | Recorded demo | [Loom video](https://www.loom.com/playlists/402ce596-9068-485e-af77-d84e756d1c37/view), recorded after the deploy phase ([ADR-015](docs/adr/015-demo-recorded-after-deploy.md)) |
 
 ## The idea in 30 seconds
@@ -82,7 +82,7 @@ If the model output is invalid, the app retries once and then falls back to keyw
 | [003](docs/adr/003-stack-and-hosting.md) | Next.js and TypeScript on Node (hosting superseded by ADR-011) |
 | [004](docs/adr/004-data-layer.md) | Superseded by ADR-010 |
 | [005](docs/adr/005-llm-provider.md) | Claude Haiku 5.5 behind a single module |
-| [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit (the last two only if deployed) |
+| [006](docs/adr/006-demo-protection.md) | Input cap, best-effort rate limit, provider spend limit (the last two apply because the demo is deployed) |
 | [007](docs/adr/007-test-strategy.md) | Unit tests, mocked AI services, two e2e happy paths (UI and debug-bar specs were added later), on-demand eval |
 | [008](docs/adr/008-design-direction.md) | Boundless-styled concept theme, no logo or fonts, labelled not affiliated |
 | [009](docs/adr/009-nextjs-conventions.md) | Next.js structure and conventions: enforced module boundaries, server-first components |

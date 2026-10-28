@@ -272,7 +272,7 @@ Sample data in `src/data`. Partner names are fictional and terms are labelled sa
 | Provider rejects the request (HTTP 400, 401, 403, 404: a wrong key, a retired model ID) | Not retried, since the same call fails again; same fallback as above. The reason is `rejected`, so the log line tells it from an outage |
 | No matches | Empty state suggests broadening; chips remain editable |
 | Empty or whitespace input | No model call; the UI prompts for a request |
-| Abuse or loops | Input cap always; per-address rate limit on the model endpoints (HTTP 429, real provider only) and the provider spend limit if deployed ([ADR-006](adr/006-demo-protection.md), [ADR-011](adr/011-local-first-delivery.md)) |
+| Abuse or loops | Input cap always; per-address rate limit on the model endpoints (HTTP 429, real provider only) and the provider spend limit, set in the provider console and not verified from this repository ([ADR-006](adr/006-demo-protection.md), [ADR-011](adr/011-local-first-delivery.md)) |
 
 ## Production path (not built)
 

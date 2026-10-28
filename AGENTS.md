@@ -56,7 +56,7 @@ Workflow per task: **plan → implement → review → complete**, using the ski
 
 ## Validation
 
-Once the project is scaffolded, run before handoff:
+Run before handoff:
 
 ```sh
 pnpm check   # typecheck, lint, format check, unit tests

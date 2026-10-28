@@ -36,7 +36,7 @@ Status of evidence: the scope decisions are judgements made against the original
 
 ### Health check
 
-- **Built:** `GET /api/health` returns `{ status: "ok", version, ai, data }`: the version and the AI provider, model and data adapter in use. It is built in Phase 0 and is the smoke-test target if the app is deployed ([ADR-011](adr/011-local-first-delivery.md)).
+- **Built:** `GET /api/health` returns `{ status: "ok", version, ai, data, debug }`: the version, the AI provider, model and data adapter in use, and whether the development inspector is on. It was built in Phase 0 and is the smoke-test target for the deployed app ([ADR-011](adr/011-local-first-delivery.md)).
 - **Not built:** a readiness check that calls the model. It would spend money on every probe and open the abuse path that [ADR-006](adr/006-demo-protection.md) closes.
 - **Trade-off:** on serverless the platform manages liveness, so the endpoint mostly serves the smoke test and the version string. It proves the app is up, not that the model is reachable.
 - **Production:** uptime monitoring, and a dependency check that does not call the model per probe (for example a cached last-success timestamp).
@@ -76,7 +76,8 @@ Status of evidence: the scope decisions are judgements made against the original
 - **Status:** done. Deployed to Netlify (Vercel fallback, not used) after Phases 0 to 5, time-boxed to 1.5 hours, with the demo recorded afterwards ([ADR-011](adr/011-local-first-delivery.md), order superseded by [ADR-015](adr/015-demo-recorded-after-deploy.md)).
 - **Why optional:** the brief lists deployment as optional and accepts a recorded demo.
 - **Trade-off:** reviewers running the code locally need an API key or the mock provider to try the AI themselves. Deploying added the public-endpoint controls ([ADR-006](adr/006-demo-protection.md)) and exposes the app to the free-plan caps.
-- **Unverified:** pnpm detection on Netlify, database connectivity from a function, and Netlify Database storage pricing after July 2026.
+- **Verified 2026-10-28:** the build runs on Netlify with pnpm, and a function connects to and queries the hosted Postgres (a live search returned results with `data.adapter` reading `postgres`; see the TODO).
+- **Unverified:** latency after the database sleeps, connection use across serverless instances, and Netlify Database storage pricing after July 2026.
 
 ## Below the line
 
